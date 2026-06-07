@@ -98,7 +98,12 @@
           <p id="menu-restaurant-desc" style="font-size: 11px; color: var(--text-muted); margin-top: 2px; line-clamp: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;"></p>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <div id="google_translate_element"></div>
+          <div id="google_translate_element" style="display: none !important;"></div>
+          <select id="lang-selector" style="background: hsla(222, 47%, 2%, 0.8); border: 1px solid var(--border-color); color: #fff; font-size: 11px; padding: 4px 8px; border-radius: 8px; width: auto; font-weight: 700; cursor: pointer; font-family: var(--font-sans); outline: none; transition: border-color 0.2s;">
+            <option value="en">English</option>
+            <option value="gu">ગુજરાતી</option>
+            <option value="hi">हिन्दी</option>
+          </select>
           <span class="badge badge-success" style="background: hsla(262, 83%, 58%, 0.15); color: var(--primary-hover); border-color: hsla(262, 83%, 58%, 0.25);">
             QR Menu
           </span>
@@ -278,17 +283,59 @@
   <!-- Custom Scripts -->
   <script type="module" src="js/customer-menu.js"></script>
 
-  <!-- Google Translate Scripts -->
+  <!-- Google Translate Scripts & Custom Selector Bindings -->
   <script type="text/javascript">
     function googleTranslateElementInit() {
       new google.translate.TranslateElement({
         pageLanguage: 'en',
-        includedLanguages: 'en,hi,es,fr,de,zh-CN,ar',
+        includedLanguages: 'en,gu,hi',
         layout: google.translate.TranslateElement.InlineLayout.SIMPLE
       }, 'google_translate_element');
     }
   </script>
   <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <script type="text/javascript">
+    const langSelector = document.getElementById('lang-selector');
+    
+    // Read current language from localStorage or googtrans cookie
+    const getActiveLanguage = () => {
+      const saved = localStorage.getItem('ros_lang');
+      if (saved) return saved;
+      
+      const match = document.cookie.match(/googtrans=\/en\/([a-z]{2})/);
+      return match ? match[1] : 'en';
+    };
+
+    // Initialize selector value
+    const activeLang = getActiveLanguage();
+    if (langSelector) {
+      langSelector.value = activeLang;
+      langSelector.addEventListener('change', (e) => {
+        const lang = e.target.value;
+        localStorage.setItem('ros_lang', lang);
+        
+        // Delete existing cookies first
+        const domains = ['', '.github.io', 'unicornsgroup.github.io', window.location.hostname];
+        domains.forEach(d => {
+          const domainStr = d ? `; domain=${d}` : '';
+          document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/${domainStr}`;
+        });
+
+        if (lang !== 'en') {
+          // Set new translation cookie
+          const cookieVal = `/en/${lang}`;
+          domains.forEach(d => {
+            const domainStr = d ? `; domain=${d}` : '';
+            document.cookie = `googtrans=${cookieVal}; path=/${domainStr}`;
+          });
+        }
+        
+        // Reload to apply translation immediately
+        window.location.reload();
+      });
+    }
+  </script>
 
 </body>
 </html>
