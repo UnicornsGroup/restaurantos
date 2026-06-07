@@ -388,6 +388,13 @@ const handleSaveInstruction = () => {
 };
 
 // Place Order
+const resetPlaceOrderBtn = () => {
+  if (!placeOrderBtn) return;
+  placeOrderBtn.disabled = false;
+  placeOrderBtn.innerHTML = '<span>Send Order to Kitchen</span><i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>';
+  if (window.lucide) window.lucide.createIcons();
+};
+
 const handlePlaceOrder = async () => {
   if (cart.length === 0) return;
   
@@ -424,6 +431,9 @@ const handlePlaceOrder = async () => {
     updateCartUI();
     toggleCartDrawer(false);
 
+    // ── Reset button so it works for next order ──
+    resetPlaceOrderBtn();
+
     // Transition to order placed completion screen
     menuContainer.classList.add('hidden');
     orderCompletedPanel.classList.remove('hidden');
@@ -437,9 +447,7 @@ const handlePlaceOrder = async () => {
   } catch (err) {
     console.error('Failed to submit order:', err);
     alert('Failed to place order. Please try again.');
-    placeOrderBtn.disabled = false;
-    placeOrderBtn.innerHTML = '<span>Send Order to Kitchen</span><i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>';
-    if (window.lucide) window.lucide.createIcons();
+    resetPlaceOrderBtn();
   }
 };
 
@@ -634,6 +642,9 @@ if (trackerBackBtn) {
     const curParams = getUrlParams();
     curParams.delete('o');
     window.history.pushState({}, '', `${window.location.pathname}?${curParams.toString()}`);
+
+    // Reset the place order button before going back to menu
+    resetPlaceOrderBtn();
 
     // Re-initialize menu
     initMenuMode();
