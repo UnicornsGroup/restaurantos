@@ -81,16 +81,34 @@
     <p style="font-size: 13px; color: var(--text-muted); max-width: 280px; line-height: 1.6; margin: 0 auto;">
       Your order has been routed to the kitchen. You can track progress in real-time.
     </p>
-    <button id="track-order-btn" class="btn btn-primary" style="margin-top: 32px; padding: 14px 28px;">
-      <span>Track Order Status</span>
-      <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
-    </button>
+    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 32px; width: 100%; max-width: 280px; margin-left: auto; margin-right: auto;">
+      <button id="track-order-btn" class="btn btn-primary" style="width: 100%; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <span>Track Order Status</span>
+        <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+      </button>
+      <a id="waiter-completed-back-btn" href="tables.html" class="btn btn-secondary hidden" style="width: 100%; padding: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+        <span>Back to Tables</span>
+      </a>
+    </div>
   </div>
 
   <!-- 4. GUEST MENU CATALOG PANELS -->
   <div id="menu-container" class="hidden animate-slide-up">
     <!-- Header with logo, description and categories filter -->
     <header class="glass-panel" style="padding: 20px; border-radius: 0; border-x: none; border-top: none; position: sticky; top: 0; z-index: 30; background: hsla(222, 47%, 4%, 0.95); backdrop-filter: blur(12px); display: flex; flex-direction: column; gap: 16px;">
+      <!-- Waiter/Staff Quick Navigation Bar -->
+      <div id="waiter-nav-bar" class="hidden" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 4px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success);"></div>
+          <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;" id="waiter-staff-tag">Staff Mode</span>
+        </div>
+        <a href="tables.html" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 6px; text-decoration: none;">
+          <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+          <span>Back to Tables</span>
+        </a>
+      </div>
+
       <div style="display: flex; align-items: center; gap: 12px;">
         <img id="menu-restaurant-logo" style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; border: 1px solid hsla(262, 83%, 58%, 0.2); display: none;" alt="Logo">
         <div style="flex: 1;">
@@ -273,11 +291,17 @@
       </div>
     </div>
 
-    <!-- Back to Menu navigation button -->
-    <button id="tracker-back-btn" class="btn btn-secondary" style="width: 100%; padding: 12px; font-size: 13px; font-weight: 600;">
-      <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>
-      <span>Back to Menu Selection</span>
-    </button>
+    <!-- Back buttons container -->
+    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+      <button id="tracker-back-btn" class="btn btn-secondary" style="width: 100%; padding: 12px; font-size: 13px; font-weight: 600;">
+        <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>
+        <span>Back to Menu Selection</span>
+      </button>
+      <a id="waiter-tracker-back-btn" href="tables.html" class="btn btn-secondary hidden" style="width: 100%; padding: 12px; font-size: 13px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+        <span>Back to Tables</span>
+      </a>
+    </div>
   </div>
 
   <!-- Custom Scripts -->

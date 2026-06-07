@@ -1,4 +1,5 @@
 import { 
+  auth,
   db, 
   collection, 
   doc, 
@@ -9,7 +10,8 @@ import {
   updateDoc,
   query, 
   where,
-  onSnapshot 
+  onSnapshot,
+  onAuthStateChanged
 } from './firebase-config.js';
 import { restaurantConfig } from './config.js';
 import { getGuest, saveGuest } from './db.js';
@@ -105,6 +107,47 @@ const statusLabels = {
 const initPage = async () => {
   // Initialize icons
   if (window.lucide) window.lucide.createIcons();
+
+  // Check auth state to show Waiter Back Buttons
+  if (auth) {
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const role = userDoc.data().role;
+            if (role === 'waiter' || role === 'owner' || role === 'manager' || role === 'cashier') {
+              // 1. Show waiter header nav bar
+              const waiterNavBar = document.getElementById('waiter-nav-bar');
+              if (waiterNavBar) {
+                waiterNavBar.classList.remove('hidden');
+                waiterNavBar.style.display = 'flex';
+                const staffTag = document.getElementById('waiter-staff-tag');
+                if (staffTag) {
+                  staffTag.innerText = `${userDoc.data().name || 'Staff'} (${role.toUpperCase()})`;
+                }
+              }
+              // 2. Show waiter completed screen back button
+              const waiterCompletedBackBtn = document.getElementById('waiter-completed-back-btn');
+              if (waiterCompletedBackBtn) {
+                waiterCompletedBackBtn.classList.remove('hidden');
+                waiterCompletedBackBtn.style.display = 'flex';
+              }
+              // 3. Show waiter tracker screen back button
+              const waiterTrackerBackBtn = document.getElementById('waiter-tracker-back-btn');
+              if (waiterTrackerBackBtn) {
+                waiterTrackerBackBtn.classList.remove('hidden');
+                waiterTrackerBackBtn.style.display = 'flex';
+              }
+              if (window.lucide) window.lucide.createIcons();
+            }
+          }
+        } catch (err) {
+          console.error("Failed to load staff details for back button:", err);
+        }
+      }
+    });
+  }
 
   const params = getUrlParams();
   orderId = params.get('o');
