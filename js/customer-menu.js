@@ -198,8 +198,9 @@ const handleGuestRegister = async (e) => {
     guestRegisterScreen.classList.add('hidden');
     initMenuMode();
   } catch (err) {
+    console.error("Guest registration failed:", err);
     grError.classList.remove('hidden');
-    grErrorText.innerText = 'Something went wrong. Please try again.';
+    grErrorText.innerText = `Error: ${err.message || 'Something went wrong. Please try again.'}`;
     grSubmitBtn.disabled = false;
     grSubmitBtn.innerHTML = '<i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i><span>Continue to Menu</span>';
     if (window.lucide) window.lucide.createIcons();
