@@ -117,6 +117,9 @@ const initPage = async () => {
   }
 
   let isTableFree = false;
+  let activeGuestNameFromTable = '';
+  let activeGuestMobileFromTable = '';
+
   if (tableId) {
     try {
       const tableDoc = await getDoc(doc(db, 'tables', tableId));
@@ -128,6 +131,9 @@ const initPage = async () => {
           // Reset guest details state for the new session
           guestName = '';
           guestMobile = '';
+        } else {
+          activeGuestNameFromTable = tableDoc.data().current_guest_name || '';
+          activeGuestMobileFromTable = tableDoc.data().current_guest_mobile || '';
         }
       }
     } catch (err) {
@@ -139,12 +145,21 @@ const initPage = async () => {
   const storedMobile = localStorage.getItem('ros_guest_mobile');
   const storedName   = localStorage.getItem('ros_guest_name');
 
-  // Only auto-bypass registration if the table is already occupied (same session)
+  // 1. First priority: Check if table document has active guest details
+  if (!isTableFree && activeGuestNameFromTable && activeGuestMobileFromTable) {
+    guestName = activeGuestNameFromTable;
+    guestMobile = activeGuestMobileFromTable;
+    localStorage.setItem('ros_guest_name', guestName);
+    localStorage.setItem('ros_guest_mobile', guestMobile);
+    initMenuMode();
+    return;
+  }
+
+  // 2. Second priority: Fall back to local storage (if occupied but table missing fields)
   if (!isTableFree && storedMobile && storedName) {
     // Returning guest — verify in Firestore
     let guest = await getGuest(storedMobile);
     if (!guest) {
-      // If the guest record was deleted from Firestore but exists in localStorage, restore it
       try {
         guest = await saveGuest(storedMobile, storedName);
       } catch (err) {
@@ -156,6 +171,15 @@ const initPage = async () => {
       guestMobile = storedMobile;
       // Update visit count silently
       saveGuest(storedMobile, guest.name).catch(() => {});
+      
+      // Update table document in background if missing guest details but occupied
+      if (tableId) {
+        updateDoc(doc(db, 'tables', tableId), {
+          current_guest_name: guestName,
+          current_guest_mobile: guestMobile
+        }).catch(() => {});
+      }
+      
       initMenuMode();
       return;
     }
@@ -221,6 +245,16 @@ const handleGuestRegister = async (e) => {
 
     // Hide registration, show menu
     guestRegisterScreen.classList.add('hidden');
+    
+    // Set table to occupied with session details in Firestore
+    if (tableId) {
+      await updateDoc(doc(db, 'tables', tableId), {
+        status: 'occupied',
+        current_guest_name: name,
+        current_guest_mobile: mobile
+      });
+    }
+
     initMenuMode();
   } catch (err) {
     console.error("Guest registration failed:", err);
@@ -275,7 +309,11 @@ const initMenuMode = async () => {
           
           // Only update table to occupied if it isn't already (saves a write)
           if (currentStatus !== 'occupied') {
-            await updateDoc(doc(db, 'tables', tableId), { status: 'occupied' });
+            await updateDoc(doc(db, 'tables', tableId), {
+              status: 'occupied',
+              current_guest_name: guestName,
+              current_guest_mobile: guestMobile
+            });
           }
         }
       } catch (err) {

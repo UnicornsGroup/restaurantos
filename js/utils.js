@@ -32,6 +32,11 @@ export const injectHeader = (activeTabId, currentUser, currentRestaurant) => {
             <i data-lucide="chef-hat" style="width: 16px; height: 16px;"></i>
             <span>Kitchen KDS</span>
           </a>
+        ` : currentUser?.role === 'waiter' ? `
+          <a href="tables.html" class="tab-btn ${activeTabId === 'tables' ? 'active' : ''}" id="nav-tables">
+            <i data-lucide="layout-grid" style="width: 16px; height: 16px;"></i>
+            <span>Tables</span>
+          </a>
         ` : `
           <a href="tables.html" class="tab-btn ${activeTabId === 'tables' ? 'active' : ''}" id="nav-tables">
             <i data-lucide="layout-grid" style="width: 16px; height: 16px;"></i>

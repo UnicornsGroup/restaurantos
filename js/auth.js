@@ -88,11 +88,26 @@ export const initAuthGuard = (activeTabId, onAuthSuccess) => {
             return;
           }
         }
+
+        // 2.6. Role-based Route Guard: Waiter staff can ONLY access tables.html and customer-menu.html
+        if (currentUser.role === 'waiter') {
+          const path = window.location.pathname;
+          if (!path.includes('tables.html') && !path.includes('customer-menu.html')) {
+            window.location.href = "tables.html";
+            return;
+          }
+        }
         
         // 3. Dynamically inject navigation layout header on protected staff views
         if (isCurrentPageProtected()) {
           const { injectHeader } = await import('./utils.js');
           injectHeader(activeTabId, currentUser, currentRestaurant);
+        }
+
+        // Initialize waiter real-time notifications if role matches
+        if (currentUser.role === 'waiter') {
+          const { initWaiterNotifications } = await import('./waiter-notifications.js');
+          initWaiterNotifications(currentUser);
         }
         
         // 4. Trigger downstream page-specific initialization

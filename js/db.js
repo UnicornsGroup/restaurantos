@@ -96,6 +96,8 @@ export const addSeatingTable = async (tableNumber, capacity, hostOrigin) => {
       table_number: tableNumber,
       capacity: parseInt(capacity),
       status: 'free',
+      current_guest_name: '',
+      current_guest_mobile: '',
       qr_code_url: qrCodeUrl,
       created_at: serverTimestamp()
     });
@@ -119,7 +121,12 @@ export const deleteSeatingTable = async (tableId) => {
 export const updateTableStatus = async (tableId, status) => {
   try {
     if (!tableId) return;
-    await updateDoc(doc(db, 'tables', tableId), { status });
+    const payload = { status };
+    if (status === 'free') {
+      payload.current_guest_name = '';
+      payload.current_guest_mobile = '';
+    }
+    await updateDoc(doc(db, 'tables', tableId), payload);
   } catch (err) {
     console.error("Failed to update table status:", err);
   }

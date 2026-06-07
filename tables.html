@@ -84,6 +84,34 @@
     </div>
   </div>
 
+  <!-- Modal C: Seating Customer Details (Waiter Flow) -->
+  <div id="waiter-seating-modal" class="modal-backdrop">
+    <div class="glass-panel modal-content" style="position: relative; max-width: 400px; width: 90%;">
+      <button id="close-waiter-seating-modal" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+      </button>
+      <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 6px;">Start Seating</h3>
+      <p id="waiter-seating-table-name" style="font-size: 12px; color: var(--primary-hover); font-weight: 600; margin-bottom: 20px;">Table 01</p>
+      
+      <div id="seating-error" class="hidden" style="color: var(--danger); font-size: 12px; background: var(--danger-glow); border: 1px solid hsla(346, 80%, 55%, 0.3); padding: 10px; border-radius: 8px; margin-bottom: 12px;"></div>
+      
+      <form id="waiter-seating-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <div>
+          <label for="seating-customer-name">Customer Name</label>
+          <input type="text" id="seating-customer-name" required placeholder="e.g. John Doe">
+        </div>
+        <div>
+          <label for="seating-customer-mobile">Mobile Number (10 digits)</label>
+          <input type="tel" id="seating-customer-mobile" required placeholder="e.g. 9876543210" pattern="[0-9]{10}" maxlength="10">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
+          <span>Confirm Details & Take Order</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script type="module" src="js/tables.js"></script>
 
