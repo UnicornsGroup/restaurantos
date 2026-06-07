@@ -98,6 +98,7 @@ const statusLabels = {
   preparing: 'Preparing',
   ready: 'Ready',
   served: 'Served',
+  settled: 'Paid & Settled',
   cancelled: 'Cancelled',
 };
 

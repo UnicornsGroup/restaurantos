@@ -58,12 +58,17 @@ export const printReceipt = (order, restaurant, currencySymbol = '₹') => {
       </head>
       <body>
         <div class="text-center">
+          ${restaurant?.logoUrl ? `<img src="${restaurant.logoUrl}" style="max-height: 48px; border-radius: 8px; margin-bottom: 8px; filter: grayscale(100%);">` : ''}
           <div class="header-title">${restName.toUpperCase()}</div>
-          <div style="font-size: 10px;">${restDesc}</div>
+          ${restDesc ? `<div style="font-size: 10px; color: #333; margin-top: 2px; line-height: 1.3;">${restDesc}</div>` : ''}
           <div class="divider"></div>
-          <div>TABLE: ${tableName.toUpperCase()}</div>
-          <div>Bill No: #${orderId.slice(0, 8).toUpperCase()}</div>
-          <div>Date: ${dateStr}</div>
+          <div style="font-size: 11px; text-align: left; line-height: 1.5; margin: 4px 0;">
+            <div><strong>Table:</strong> ${tableName.toUpperCase()}</div>
+            <div><strong>Customer:</strong> ${order.customer_name || 'Guest'}</div>
+            ${order.customer_mobile ? `<div><strong>Mobile:</strong> ${order.customer_mobile}</div>` : ''}
+            <div><strong>Bill No:</strong> #${orderId.slice(0, 8).toUpperCase()}</div>
+            <div><strong>Date:</strong> ${dateStr}</div>
+          </div>
           <div class="divider"></div>
         </div>
 

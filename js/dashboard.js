@@ -48,9 +48,9 @@ const updateKPIs = () => {
     return createdDate.getTime() >= today.getTime();
   });
 
-  // 2. Sum sales today (only completed 'served' bills)
+  // 2. Sum sales today (only completed 'served'/'settled' bills)
   const todaySales = todayOrders
-    .filter(order => order.status === 'served')
+    .filter(order => ['served', 'settled'].includes(order.status))
     .reduce((acc, order) => {
       const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const tax = subtotal * 0.05;
@@ -106,7 +106,7 @@ const renderTransactionsTable = () => {
       <td style="padding: 12px; color: var(--text-muted);">${dateStr}</td>
       <td style="padding: 12px; font-weight: 700; text-align: right;">${formatPrice(total, curSymbol)}</td>
       <td style="padding: 12px; text-align: right;">
-        <span class="badge ${order.status === 'served' ? 'badge-success' : 'badge-warning'}">${order.status}</span>
+        <span class="badge ${['served', 'settled'].includes(order.status) ? 'badge-success' : 'badge-warning'}">${order.status}</span>
       </td>
     `;
     transactionsBody.appendChild(tr);
@@ -136,7 +136,7 @@ const renderSalesGraph = () => {
     const nextDay = new Date(d.getTime() + 86400000);
     const dayOrders = ordersList.filter(order => {
       const createdDate = order.created_at?.toDate ? order.created_at.toDate() : new Date(order.created_at);
-      return createdDate.getTime() >= d.getTime() && createdDate.getTime() < nextDay.getTime() && order.status === 'served';
+      return createdDate.getTime() >= d.getTime() && createdDate.getTime() < nextDay.getTime() && ['served', 'settled'].includes(order.status);
     });
 
     const daySum = dayOrders.reduce((acc, order) => {

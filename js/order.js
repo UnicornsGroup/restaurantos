@@ -243,7 +243,7 @@ const calculateCheckoutTotal = () => {
   if (grandTotalSpan) grandTotalSpan.innerText = formatPrice(grandTotal, curSymbol);
 };
 
-// Check if selected table has an active order on KDS and load it
+// Check if selected table has active orders on KDS and load them
 const loadTableCartAndBill = () => {
   if (!selectedTableId) {
     cart = [];
@@ -253,17 +253,31 @@ const loadTableCartAndBill = () => {
     return;
   }
 
-  // Find active orders for the selected table
-  const activeOrder = activeOrders.find(o => o.table_id === selectedTableId && ['received', 'preparing', 'ready'].includes(o.status));
-  if (activeOrder) {
-    cart = activeOrder.items.map(i => ({
-      item_id: i.item_id,
-      name: i.name,
-      price: i.price,
-      quantity: i.quantity,
-      special_instruction: i.special_instruction
-    }));
-    discountAmount = activeOrder.discount || 0;
+  // Find all unpaid orders for the selected table (including served)
+  const matchingOrders = activeOrders.filter(o => o.table_id === selectedTableId && ['received', 'preparing', 'ready', 'served'].includes(o.status));
+  if (matchingOrders.length > 0) {
+    const aggregatedItems = [];
+    matchingOrders.forEach(o => {
+      if (o.items && Array.isArray(o.items)) {
+        o.items.forEach(item => {
+          const existing = aggregatedItems.find(i => i.item_id === item.item_id);
+          if (existing) {
+            existing.quantity += item.quantity;
+          } else {
+            aggregatedItems.push({
+              item_id: item.item_id,
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              special_instruction: item.special_instruction || null
+            });
+          }
+        });
+      }
+    });
+
+    cart = aggregatedItems;
+    discountAmount = matchingOrders.reduce((sum, o) => sum + (o.discount || 0), 0);
     if (discountInput) discountInput.value = discountAmount || '';
   } else {
     cart = [];
@@ -336,18 +350,40 @@ const handleSettleAndPrintBill = async () => {
     const tableName = table ? table.table_number : 'Takeaway';
 
     let orderToPrint = null;
-    const existingOrder = activeOrders.find(o => o.table_id === selectedTableId && ['received', 'preparing', 'ready'].includes(o.status));
+    const curSymbol = activeRestaurant?.currency || '₹';
 
-    if (existingOrder) {
-      // Mark as served to free table status
-      await updateOrderStatus(existingOrder.id, 'served', selectedTableId);
-      orderToPrint = { ...existingOrder, discount: discountAmount, items: cart };
+    const matchingOrders = activeOrders.filter(o => o.table_id === selectedTableId && ['received', 'preparing', 'ready', 'served'].includes(o.status));
+
+    if (matchingOrders.length > 0) {
+      // Settle all active/unpaid orders of this table by setting their status to 'settled'
+      for (const ord of matchingOrders) {
+        await updateOrderStatus(ord.id, 'settled');
+      }
+      // Explicitly free the table status
+      await updateTableStatus(selectedTableId, 'free');
+
+      const firstOrder = matchingOrders[0];
+      const customerName = firstOrder?.customer_name || 'Guest';
+      const customerMobile = firstOrder?.customer_mobile || '';
+
+      orderToPrint = {
+        id: firstOrder.id,
+        table_number: tableName,
+        customer_name: customerName,
+        customer_mobile: customerMobile,
+        status: 'settled',
+        items: cart,
+        discount: discountAmount,
+        created_at: firstOrder.created_at || new Date()
+      };
     } else {
-      // Cash checkout directly
+      // Cash checkout directly (POS order without QR scan)
       const payload = {
         table_id: selectedTableId,
         table_number: tableName,
-        status: 'served',
+        customer_name: 'Guest',
+        customer_mobile: '',
+        status: 'settled',
         items: cart,
         discount: discountAmount,
         created_at: new Date()
@@ -358,7 +394,6 @@ const handleSettleAndPrintBill = async () => {
     }
 
     // Print Receipt
-    const curSymbol = activeRestaurant?.currency || '₹';
     printReceipt(orderToPrint, activeRestaurant, curSymbol);
 
     // Reset checkout state

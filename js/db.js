@@ -217,8 +217,8 @@ export const updateOrderStatus = async (orderId, nextStatus, tableId = null) => 
   try {
     await updateDoc(doc(db, 'orders', orderId), { status: nextStatus });
     
-    // If order is served or cancelled, release the table status back to 'free'
-    if ((nextStatus === 'served' || nextStatus === 'cancelled') && tableId) {
+    // If order is cancelled, release the table status back to 'free'
+    if (nextStatus === 'cancelled' && tableId) {
       await updateTableStatus(tableId, 'free');
     }
     return true;
