@@ -259,48 +259,320 @@ h1, h2, h3, h4, h5 {
   color: var(--text-main) !important;
 }
 
-/* Specific text color overrides for Light Theme readability */
-.light-theme .kpi-value,
-.light-theme .table-card-number,
+/* ─── Comprehensive Light Theme Text Contrast Overrides ─────────────────────
+   Forces dark readable text on ALL elements that may carry hardcoded
+   color:#fff via inline styles or JS-generated markup. Elements on
+   colored backgrounds (buttons, active tabs, step icons) are excluded. */
+
+/* Master sweep: force dark text on every common text element in light mode */
+.light-theme h1,
+.light-theme h2,
+.light-theme h3,
+.light-theme h4,
+.light-theme h5,
+.light-theme h6,
+.light-theme p,
+.light-theme span,
+.light-theme div,
+.light-theme td,
+.light-theme th,
+.light-theme label,
+.light-theme strong,
+.light-theme li {
+  color: var(--text-main) !important;
+}
+
+/* Preserve white text on elements with colored/gradient backgrounds */
+.light-theme .btn-primary,
+.light-theme .btn-primary span,
+.light-theme .btn-primary i,
+.light-theme .btn-danger:hover,
+.light-theme .btn-danger:hover span,
+.light-theme .category-tab.active,
+.light-theme .step-node-icon.active,
+.light-theme .step-node-icon.passed,
+.light-theme [style*="background: linear-gradient"] i,
+.light-theme [style*="background: linear-gradient"] span {
+  color: #fff !important;
+}
+
+/* Cart counter badge on colored background stays white */
+.light-theme #cart-counter {
+  color: #fff !important;
+}
+
+/* Spinners inside buttons need white */
+.light-theme .btn-primary div[style*="border-top-color"] {
+  border-top-color: #fff !important;
+}
+
+/* Muted text should stay muted, not forced to main text */
+.light-theme .text-muted,
+.light-theme [class*="text-muted"],
+.light-theme .kpi-title,
+.light-theme .kds-ticket-time,
+.light-theme .kds-item-qty,
+.light-theme .summary-row:not(.total),
+.light-theme .table-card-body {
+  color: var(--text-muted) !important;
+}
+
+/* Badges keep their semantic colors */
+.light-theme .badge-success {
+  color: var(--success) !important;
+}
+.light-theme .badge-danger {
+  color: var(--danger) !important;
+}
+.light-theme .badge-warning {
+  color: hsl(38, 92%, 50%) !important;
+}
+
+/* Danger button (un-hovered) keeps its danger color */
+.light-theme .btn-danger {
+  color: var(--danger) !important;
+}
+
+/* Success / danger colored accents in KPI icons */
+.light-theme .kpi-icon-wrapper {
+  color: var(--primary-hover) !important;
+}
+
+/* Auth / login page sparkles icon on gradient stays white */
+.light-theme #login-sparkles-fallback i {
+  color: #fff !important;
+}
+
+/* Section header icons (lucide) inherit text-main */
+.light-theme .section-header h1 i,
+.light-theme .section-header h2 i {
+  color: var(--text-main) !important;
+}
+
+/* Glass-panel overrides — ensure nested content is readable */
+.light-theme .glass-panel h1,
+.light-theme .glass-panel h2,
+.light-theme .glass-panel h3,
+.light-theme .glass-panel h4,
+.light-theme .glass-panel h5,
+.light-theme .glass-panel span:not(.badge):not(.badge-success):not(.badge-danger):not(.badge-warning),
+.light-theme .glass-panel div,
+.light-theme .glass-panel td,
+.light-theme .glass-panel th {
+  color: var(--text-main) !important;
+}
+
+/* Credential overlay / error screens on login */
+.light-theme .credential-overlay h2,
+.light-theme .credential-overlay p,
+.light-theme .credential-overlay span,
+.light-theme .credential-overlay div {
+  color: var(--text-main) !important;
+}
+
+/* Customer menu specific: restaurant name, drawer, tracker */
+.light-theme #gr-restaurant-name,
+.light-theme #menu-restaurant-name,
 .light-theme #drawer-subtotal,
-.light-theme .summary-row.total,
-.light-theme .kds-item-row span,
-.light-theme td {
+.light-theme #tracker-status-text,
+.light-theme .cart-drawer h3,
+.light-theme .cart-drawer h4,
+.light-theme .cart-drawer span,
+.light-theme .cart-drawer div {
   color: var(--text-main) !important;
 }
 
-/* General overrides for text elements inside cards and modals in Light Theme */
-.light-theme .glass-panel span:not(.text-muted):not(.btn):not(.badge) {
+/* Customer menu: fixed cart bar text */
+.light-theme .fixed-cart-bar span,
+.light-theme .fixed-cart-bar div {
   color: var(--text-main) !important;
 }
 
-/* POS checkout billing list text overrides */
+/* KDS ticket overrides */
+.light-theme .kds-ticket h4,
+.light-theme .kds-ticket span,
+.light-theme .kds-ticket div {
+  color: var(--text-main) !important;
+}
+
+/* KDS ticket notes keep their accent color */
+.light-theme .kds-ticket-notes {
+  color: var(--primary-hover) !important;
+}
+.light-theme .instruction-note-card {
+  color: var(--primary-hover) !important;
+}
+
+/* Cart item rows in POS order page */
 .light-theme .cart-item-row h5,
 .light-theme .cart-item-row span,
 .light-theme .cart-item-row div {
   color: var(--text-main) !important;
 }
 
-/* KDS active ticket text overrides */
-.light-theme .kds-ticket span,
-.light-theme .kds-ticket div {
+/* Quantity selector buttons keep muted */
+.light-theme .cart-item-qty-btn {
+  color: var(--text-muted) !important;
+}
+.light-theme .cart-item-qty-btn:hover {
   color: var(--text-main) !important;
 }
 
-/* Customer menu active selections list overrides */
-.light-theme #cart-items-container h4,
-.light-theme #cart-items-container span {
+/* POS dish card text */
+.light-theme .pos-dish-card h4,
+.light-theme .pos-dish-card span,
+.light-theme .pos-dish-card div {
   color: var(--text-main) !important;
 }
 
-/* Order tracker dishes list overrides */
-.light-theme #tracker-items-list h5 {
+/* Menu builder: category table, menu item cards */
+.light-theme .menu-item-card h4,
+.light-theme .menu-item-card span,
+.light-theme .menu-item-card div {
   color: var(--text-main) !important;
 }
 
-/* Staff management profiles grid overrides */
+/* Staff management: staff cards */
 .light-theme #staff-grid h4,
-.light-theme #staff-grid span {
+.light-theme #staff-grid span,
+.light-theme #staff-grid div {
   color: var(--text-main) !important;
+}
+
+/* Waiter notification toasts should keep white on colored bg */
+.light-theme .waiter-notification {
+  color: #fff !important;
+}
+
+/* Google translate widget in light mode */
+.light-theme .goog-te-gadget-simple {
+  background-color: hsl(0, 0%, 100%) !important;
+  color: var(--text-main) !important;
+}
+.light-theme .goog-te-gadget-simple .goog-te-menu-value,
+.light-theme .goog-te-gadget-simple .goog-te-menu-value span {
+  color: var(--text-main) !important;
+}
+
+/* Language selector dropdown */
+.light-theme #lang-selector {
+  background: hsl(0, 0%, 100%) !important;
+  color: var(--text-main) !important;
+}
+
+/* Links inside credentials / overlay panels */
+.light-theme .credential-overlay a {
+  color: var(--primary) !important;
+}
+
+/* Settings page: logo preview text */
+.light-theme #logo-preview span {
+  color: var(--text-main) !important;
+}
+
+/* Table grid card overrides */
+.light-theme .table-card-number {
+  color: var(--text-main) !important;
+}
+.light-theme .table-card-body span,
+.light-theme .table-card-body div {
+  color: var(--text-main) !important;
+}
+
+/* Modal content text */
+.light-theme .modal-content h3,
+.light-theme .modal-content h4,
+.light-theme .modal-content span,
+.light-theme .modal-content div,
+.light-theme .modal-content p,
+.light-theme .modal-content label {
+  color: var(--text-main) !important;
+}
+
+/* Error alerts keep red text */
+.light-theme [id$="-alert-error"],
+.light-theme [id$="-alert-error"] span {
+  color: var(--danger) !important;
+}
+
+/* Success alerts keep green text */
+.light-theme [id$="-alert-success"],
+.light-theme [id$="-alert-success"] span {
+  color: var(--success) !important;
+}
+
+/* Login error box */
+.light-theme #login-error,
+.light-theme #login-error span {
+  color: var(--danger) !important;
+}
+
+/* Tracker items list */
+.light-theme #tracker-items-list h5,
+.light-theme #tracker-items-list span {
+  color: var(--text-main) !important;
+}
+
+/* Cart items container */
+.light-theme #cart-items-container h4,
+.light-theme #cart-items-container span,
+.light-theme #cart-items-container div {
+  color: var(--text-main) !important;
+}
+
+/* Scrollbar in light mode */
+.light-theme ::-webkit-scrollbar-thumb {
+  background: hsla(215, 16%, 60%, 0.5);
+}
+.light-theme ::-webkit-scrollbar-thumb:hover {
+  background: hsla(215, 16%, 50%, 0.7);
+}
+
+/* Header background in light mode */
+.light-theme header.main-header {
+  background: hsla(210, 20%, 96%, 0.9) !important;
+  backdrop-filter: blur(12px);
+}
+
+/* Tab buttons in light mode */
+.light-theme .header-nav .tab-btn {
+  color: var(--text-muted) !important;
+}
+.light-theme .header-nav .tab-btn:hover {
+  color: var(--text-main) !important;
+}
+.light-theme .header-nav .tab-btn.active {
+  color: var(--text-main) !important;
+}
+
+/* Reduce ambient glow intensity in light mode */
+.light-theme::before,
+.light-theme::after {
+  opacity: 0.06 !important;
+}
+
+/* Glass panel subtle shadow adjustment for light mode */
+.light-theme .glass-panel {
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Input/select backgrounds in light mode (already covered but reinforcing) */
+.light-theme input,
+.light-theme select,
+.light-theme textarea {
+  background-color: hsl(0, 0%, 100%) !important;
+  border-color: hsla(215, 20%, 82%, 0.8) !important;
+  color: hsl(222, 47%, 12%) !important;
+}
+
+/* Placeholder text for inputs */
+.light-theme input::placeholder,
+.light-theme textarea::placeholder {
+  color: hsla(215, 16%, 40%, 0.6) !important;
+}
+
+/* Remove item image button stays white on dark bg */
+.light-theme #remove-item-image-btn {
+  color: #fff !important;
 }
 
