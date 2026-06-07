@@ -433,6 +433,9 @@ const renderMenuItems = () => {
     card.style.overflow = 'hidden';
     
     card.innerHTML = `
+      ${item.image ? `
+        <img src="${item.image}" style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" alt="${item.name}">
+      ` : ''}
       <div style="flex: 1; display: flex; flex-direction: column; gap: 4px; text-align: left;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="width: 8px; height: 8px; border-radius: 50%; background: ${item.tags?.includes('Veg') ? 'var(--success)' : 'var(--danger)'}"></span>

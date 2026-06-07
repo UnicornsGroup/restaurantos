@@ -10,8 +10,14 @@ let activeRestaurant = null;
 let categoriesCache = [];
 let menuItemsList = [];
 let editingItemId = null;
+let currentBase64Image = "";
 
 // DOM references
+const itemImageFile = document.getElementById('item-image-file');
+const itemImageFilename = document.getElementById('item-image-filename');
+const itemImagePreviewContainer = document.getElementById('item-image-preview-container');
+const itemImagePreview = document.getElementById('item-image-preview');
+const removeItemImageBtn = document.getElementById('remove-item-image-btn');
 const categoryListBody = document.getElementById('category-list-body');
 const addCategoryBtn = document.getElementById('add-category-btn');
 const categoryModal = document.getElementById('category-modal');
@@ -65,11 +71,49 @@ const initMenuBuilder = () => {
     editingItemId = null;
     document.getElementById('item-modal-title').innerText = 'Create New Dish';
     itemForm.reset();
+    currentBase64Image = "";
+    if (itemImageFile) itemImageFile.value = '';
+    if (itemImageFilename) itemImageFilename.innerText = 'No file selected';
+    if (itemImagePreviewContainer) itemImagePreviewContainer.style.display = 'none';
     populateCategoryDropdown();
     toggleModal(itemModal, true);
   });
   if (closeItemModal) closeItemModal.addEventListener('click', () => toggleModal(itemModal, false));
   if (itemForm) itemForm.addEventListener('submit', handleSaveItemSubmit);
+
+  // File upload change listener
+  if (itemImageFile) {
+    itemImageFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.size > 256000) { // Limit to 250KB
+        alert("Image is too large! Please choose an image smaller than 250KB to ensure fast loading times.");
+        itemImageFile.value = '';
+        return;
+      }
+
+      if (itemImageFilename) itemImageFilename.innerText = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        currentBase64Image = event.target.result;
+        if (itemImagePreview) itemImagePreview.src = currentBase64Image;
+        if (itemImagePreviewContainer) itemImagePreviewContainer.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Remove image click listener
+  if (removeItemImageBtn) {
+    removeItemImageBtn.addEventListener('click', () => {
+      currentBase64Image = "";
+      if (itemImageFile) itemImageFile.value = '';
+      if (itemImageFilename) itemImageFilename.innerText = 'No file selected';
+      if (itemImagePreviewContainer) itemImagePreviewContainer.style.display = 'none';
+    });
+  }
 
   // Subscriptions
   subscribeCategories((categories) => {
@@ -152,18 +196,24 @@ const renderMenuItemsGrid = () => {
     card.className = 'glass-panel menu-item-card animate-slide-up';
     card.style.display = 'flex';
     card.style.justifyContent = 'space-between';
+    card.style.gap = '16px';
     card.innerHTML = `
-      <div style="flex: 1;">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${item.tags?.includes('Veg') ? 'var(--success)' : 'var(--danger)'}"></span>
-          <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${item.category_name}</span>
-          ${!item.is_available ? '<span class="badge" style="background: hsla(38, 92%, 50%, 0.15); color: hsl(38, 92%, 50%); border-color: hsla(38, 92%, 50%, 0.2)">Sold Out</span>' : ''}
-        </div>
-        <h4 style="color: #fff; font-size: 16px; margin-bottom: 4px;">${item.name}</h4>
-        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; line-clamp: 2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; max-width: 260px;">${item.description || ''}</p>
-        <div style="font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 12px;">
-          <span>${curSymbol}${parseFloat(item.price.toString()).toFixed(2)}</span>
-          <span style="font-weight: 400; color: var(--text-muted); font-size: 11px;">• &nbsp;${item.prep_time} mins prep</span>
+      <div style="flex: 1; display: flex; gap: 16px;">
+        ${item.image ? `
+          <img src="${item.image}" style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" alt="${item.name}">
+        ` : ''}
+        <div style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: ${item.tags?.includes('Veg') ? 'var(--success)' : 'var(--danger)'}"></span>
+            <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${item.category_name}</span>
+            ${!item.is_available ? '<span class="badge" style="background: hsla(38, 92%, 50%, 0.15); color: hsl(38, 92%, 50%); border-color: hsla(38, 92%, 50%, 0.2)">Sold Out</span>' : ''}
+          </div>
+          <h4 style="color: #fff; font-size: 16px; margin-bottom: 4px;">${item.name}</h4>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; line-clamp: 2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; max-width: 260px;">${item.description || ''}</p>
+          <div style="font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 12px;">
+            <span>${curSymbol}${parseFloat(item.price.toString()).toFixed(2)}</span>
+            <span style="font-weight: 400; color: var(--text-muted); font-size: 11px;">• &nbsp;${item.prep_time} mins prep</span>
+          </div>
         </div>
       </div>
       <div style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; shrink-0;">
@@ -196,6 +246,18 @@ const renderMenuItemsGrid = () => {
         document.getElementById('item-tags').value = item.tags?.join(', ') || '';
         document.getElementById('item-allergens').value = item.allergens?.join(', ') || '';
         
+        if (item.image) {
+          currentBase64Image = item.image;
+          if (itemImagePreview) itemImagePreview.src = currentBase64Image;
+          if (itemImagePreviewContainer) itemImagePreviewContainer.style.display = 'block';
+          if (itemImageFilename) itemImageFilename.innerText = 'Current image loaded';
+        } else {
+          currentBase64Image = "";
+          if (itemImageFile) itemImageFile.value = '';
+          if (itemImageFilename) itemImageFilename.innerText = 'No file selected';
+          if (itemImagePreviewContainer) itemImagePreviewContainer.style.display = 'none';
+        }
+
         populateCategoryDropdown();
         itemCatSelect.value = item.category_id;
         toggleModal(itemModal, true);
@@ -254,7 +316,8 @@ const handleSaveItemSubmit = async (e) => {
     price,
     prep_time: prepTime,
     tags,
-    allergens
+    allergens,
+    image: currentBase64Image || ""
   };
 
   try {

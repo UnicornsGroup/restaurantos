@@ -202,6 +202,25 @@
           <input type="text" id="item-allergens" placeholder="Dairy, Nuts, Gluten">
         </div>
 
+        <div>
+          <label>Dish Image</label>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <input type="file" id="item-image-file" accept="image/*" style="display: none;">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('item-image-file').click()" style="padding: 8px 16px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="upload" style="width: 14px; height: 14px;"></i>
+              <span>Upload Image</span>
+            </button>
+            <span id="item-image-filename" style="font-size: 11px; color: var(--text-muted); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 200px;">No file selected</span>
+          </div>
+          <!-- Image preview container -->
+          <div id="item-image-preview-container" style="display: none; margin-top: 10px; position: relative; width: 120px; height: 80px; border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; background: hsla(222, 47%, 2%, 0.5);">
+            <img id="item-image-preview" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
+            <button type="button" id="remove-item-image-btn" style="position: absolute; top: 4px; right: 4px; border-radius: 50%; background: rgba(0,0,0,0.65); border: none; color: #fff; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;">
+              <i data-lucide="x" style="width: 12px; height: 12px;"></i>
+            </button>
+          </div>
+        </div>
+
         <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Save Dish Configurations</button>
       </form>
     </div>
