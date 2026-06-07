@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RestaurantOS — Staff Management</title>
+  <meta name="description" content="Manage restaurant staff users, roles, and table assignments for waiters.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Navigation Dynamic Header Target -->
+    <header class="main-header"></header>
+
+    <!-- Main Workspace Content -->
+    <main class="main-content">
+      <div class="dashboard-panel">
+        
+        <!-- Section Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h2 style="font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 4px;">Staff Management</h2>
+            <p style="font-size: 13px; color: var(--text-muted);">Manage employee accounts, terminal login credentials, roles, and waiter table scopes.</p>
+          </div>
+          <button id="add-staff-btn" class="btn btn-primary">
+            <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+            <span>Add Staff Member</span>
+          </button>
+        </div>
+
+        <!-- Success & Error Alerts -->
+        <div id="staff-alert-success" class="hidden" style="background: var(--success-glow); border: 1px solid hsla(160, 70%, 40%, 0.3); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--success); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="check-circle-2" style="width: 15px; height: 15px; flex-shrink: 0;"></i>
+          <span id="staff-success-text">Staff member added successfully.</span>
+        </div>
+        <div id="staff-alert-error" class="hidden" style="background: var(--danger-glow); border: 1px solid hsla(346, 80%, 55%, 0.3); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--danger); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="alert-circle" style="width: 15px; height: 15px; flex-shrink: 0;"></i>
+          <span id="staff-error-text">Failed to perform action.</span>
+        </div>
+
+        <!-- Staff List Grid -->
+        <div id="staff-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+          <!-- Dynamically populated staff cards -->
+          <div class="glass-panel" style="padding: 32px; text-align: center; grid-column: 1 / -1;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: hsla(222, 47%, 12%, 0.6); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-muted); margin: 0 auto 16px;">
+              <i data-lucide="users" style="width: 24px; height: 24px;"></i>
+            </div>
+            <p style="font-size: 14px; color: var(--text-muted);">Loading staff configurations...</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Create/Edit Staff Member -->
+  <div id="staff-modal" class="modal-backdrop">
+    <div class="glass-panel modal-content" style="position: relative; max-width: 460px; max-height: 90vh; overflow-y: auto;">
+      <button id="close-staff-modal" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+      </button>
+      <h3 id="staff-modal-title" style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 16px;">Add Staff Member</h3>
+      
+      <form id="staff-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <div>
+          <label for="staff-name">Full Name</label>
+          <input type="text" id="staff-name" required placeholder="e.g. John Doe">
+        </div>
+        
+        <div>
+          <label for="staff-email">Email Address</label>
+          <input type="email" id="staff-email" required placeholder="e.g. waiter1@cafe.com">
+        </div>
+
+        <div id="password-field-wrapper">
+          <label for="staff-password">Sign-In Password</label>
+          <input type="password" id="staff-password" placeholder="At least 6 characters">
+          <p style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Password used to log in on the POS terminal.</p>
+        </div>
+
+        <div>
+          <label for="staff-role">Access Role</label>
+          <select id="staff-role" required style="cursor: pointer;">
+            <option value="waiter">Waiter (Order Taker)</option>
+            <option value="kitchen">Kitchen Staff (KDS preparation)</option>
+            <option value="cashier">Cashier (POS Checkout/Billing)</option>
+            <option value="manager">Manager (Menu and table manager)</option>
+            <option value="owner">Owner (Full admin rights)</option>
+          </select>
+        </div>
+
+        <!-- Table Assignments Selection (Only for Waiters) -->
+        <div id="waiter-tables-container" style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 4px;">
+          <label style="margin-bottom: 8px;">Assigned Tables (Waiter Scope)</label>
+          <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Select tables this waiter is responsible for. They will only see these tables on their view and receive food-ready alerts for them.</p>
+          
+          <div id="tables-checkbox-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 180px; overflow-y: auto; background: hsla(222, 47%, 2%, 0.6); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">
+            <!-- Dynamically populated tables checkboxes -->
+            <p style="font-size: 11px; color: var(--text-muted); grid-column: 1 / -1; text-align: center; margin: 8px 0;">No tables found. Add tables in QR Setup first.</p>
+          </div>
+        </div>
+
+        <button type="submit" id="staff-submit-btn" class="btn btn-primary" style="width: 100%; margin-top: 8px; height: 42px;">Save Staff Account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ES MODULE SCRIPTS -->
+  <script type="module" src="js/staff.js"></script>
+
+</body>
+</html>

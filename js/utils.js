@@ -58,6 +58,10 @@ export const injectHeader = (activeTabId, currentUser, currentRestaurant) => {
             <i data-lucide="qr-code" style="width: 16px; height: 16px;"></i>
             <span>QR Setup</span>
           </a>
+          <a href="staff.html" class="tab-btn ${activeTabId === 'staff' ? 'active' : ''}" id="nav-staff">
+            <i data-lucide="users" style="width: 16px; height: 16px;"></i>
+            <span>Staff</span>
+          </a>
           <a href="dashboard.html" class="tab-btn ${activeTabId === 'dashboard' ? 'active' : ''}" id="nav-dashboard">
             <i data-lucide="bar-chart-3" style="width: 16px; height: 16px;"></i>
             <span>Dashboard</span>
