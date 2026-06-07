@@ -121,7 +121,15 @@ const initPage = async () => {
 
   if (storedMobile && storedName) {
     // Returning guest — verify in Firestore
-    const guest = await getGuest(storedMobile);
+    let guest = await getGuest(storedMobile);
+    if (!guest) {
+      // If the guest record was deleted from Firestore but exists in localStorage, restore it
+      try {
+        guest = await saveGuest(storedMobile, storedName);
+      } catch (err) {
+        console.error("Failed to restore guest profile in Firestore:", err);
+      }
+    }
     if (guest) {
       guestName   = guest.name;
       guestMobile = storedMobile;
@@ -745,8 +753,16 @@ if (trackerBackBtn) {
     // Reset the place order button before going back to menu
     resetPlaceOrderBtn();
 
-    // Re-initialize menu
-    initMenuMode();
+    // Check if guest info is present, otherwise force guest registration
+    const storedMobile = localStorage.getItem('ros_guest_mobile');
+    const storedName   = localStorage.getItem('ros_guest_name');
+
+    if (storedMobile && storedName) {
+      initMenuMode();
+    } else {
+      trackerContainer.classList.add('hidden');
+      initPage();
+    }
   });
 }
 
