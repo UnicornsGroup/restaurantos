@@ -343,6 +343,11 @@ const handleSettleAndPrintBill = async () => {
     return;
   }
 
+  // Create a local snapshot of cart & discount because the realtime listener
+  // will clear the global 'cart' as soon as we update order statuses to 'settled'
+  const itemsToPrint = [...cart];
+  const finalDiscount = discountAmount;
+
   btnPayPrint.disabled = true;
 
   try {
@@ -372,8 +377,8 @@ const handleSettleAndPrintBill = async () => {
         customer_name: customerName,
         customer_mobile: customerMobile,
         status: 'settled',
-        items: cart,
-        discount: discountAmount,
+        items: itemsToPrint,
+        discount: finalDiscount,
         created_at: firstOrder.created_at || new Date()
       };
     } else {
@@ -384,8 +389,8 @@ const handleSettleAndPrintBill = async () => {
         customer_name: 'Guest',
         customer_mobile: '',
         status: 'settled',
-        items: cart,
-        discount: discountAmount,
+        items: itemsToPrint,
+        discount: finalDiscount,
         created_at: new Date()
       };
       const orderId = await createCustomerOrder(payload);
