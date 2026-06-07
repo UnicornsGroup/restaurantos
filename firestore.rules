@@ -42,5 +42,10 @@ service cloud.firestore {
       allow read: if true; // Publicly readable
       allow write: if request.auth != null; // Only authenticated staff can edit
     }
+
+    // Guests (Customer Profiles) Collection Rules
+    match /guests/{mobile} {
+      allow read, write: if true; // Customers register and fetch their own profile without login
+    }
   }
 }

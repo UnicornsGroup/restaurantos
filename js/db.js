@@ -42,6 +42,46 @@ export const saveRestaurantSettings = async (settings) => {
   }
 };
 
+// Guest / Customer Registration CRUD
+// Mobile number is used as the document ID for O(1) lookup
+export const getGuest = async (mobile) => {
+  try {
+    const snap = await getDoc(doc(db, 'guests', mobile));
+    return snap.exists() ? { mobile, ...snap.data() } : null;
+  } catch (err) {
+    console.error("Failed to fetch guest profile:", err);
+    return null;
+  }
+};
+
+export const saveGuest = async (mobile, name) => {
+  try {
+    const guestRef = doc(db, 'guests', mobile);
+    const existing = await getDoc(guestRef);
+
+    if (existing.exists()) {
+      // Returning guest — increment visit count
+      await updateDoc(guestRef, {
+        visit_count: (existing.data().visit_count || 1) + 1,
+        last_visit: serverTimestamp()
+      });
+    } else {
+      // New guest — create record
+      await setDoc(guestRef, {
+        name,
+        mobile,
+        visit_count: 1,
+        created_at: serverTimestamp(),
+        last_visit: serverTimestamp()
+      });
+    }
+    return { name, mobile };
+  } catch (err) {
+    console.error("Failed to save guest profile:", err);
+    throw err;
+  }
+};
+
 // Tables Database CRUD
 export const addSeatingTable = async (tableNumber, capacity, hostOrigin) => {
   try {

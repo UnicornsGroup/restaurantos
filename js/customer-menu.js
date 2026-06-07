@@ -5,12 +5,14 @@ import {
   getDoc, 
   getDocs, 
   addDoc,
+  setDoc,
   updateDoc,
   query, 
   where,
   onSnapshot 
 } from './firebase-config.js';
 import { restaurantConfig } from './config.js';
+import { getGuest, saveGuest } from './db.js';
 
 // DOM elements cache
 const menuLoading = document.getElementById('menu-loading');
@@ -63,12 +65,26 @@ const getUrlParams = () => new URLSearchParams(window.location.search);
 let tableId = getUrlParams().get('t');
 let orderId = getUrlParams().get('o');
 
+// Guest registration DOM
+const guestRegisterScreen = document.getElementById('guest-register-screen');
+const guestRegisterForm   = document.getElementById('guest-register-form');
+const grName              = document.getElementById('gr-name');
+const grMobile            = document.getElementById('gr-mobile');
+const grSubmitBtn         = document.getElementById('gr-submit-btn');
+const grError             = document.getElementById('gr-error');
+const grErrorText         = document.getElementById('gr-error-text');
+const grRestaurantName    = document.getElementById('gr-restaurant-name');
+
 // Active local states
 let activeSettings = restaurantConfig;
 let tableNumber = '';
 let categories = [];
 let menuItems = [];
 let cart = [];
+
+// Guest state
+let guestName   = '';
+let guestMobile = '';
 
 let activeInstructionItemId = null;
 let selectedCategory = 'all';
@@ -89,15 +105,96 @@ const initPage = async () => {
   // Initialize icons
   if (window.lucide) window.lucide.createIcons();
 
-  // Parse order ID from URL to check if we should show tracking directly
   const params = getUrlParams();
   orderId = params.get('o');
   tableId = params.get('t');
 
   if (orderId) {
+    // Direct tracker link — skip guest check
     initTrackerMode(orderId);
-  } else {
+    return;
+  }
+
+  // ── Guest check ────────────────────────────────────────────────────────────
+  const storedMobile = localStorage.getItem('ros_guest_mobile');
+  const storedName   = localStorage.getItem('ros_guest_name');
+
+  if (storedMobile && storedName) {
+    // Returning guest — verify in Firestore
+    const guest = await getGuest(storedMobile);
+    if (guest) {
+      guestName   = guest.name;
+      guestMobile = storedMobile;
+      // Update visit count silently
+      saveGuest(storedMobile, guest.name).catch(() => {});
+      initMenuMode();
+      return;
+    }
+  }
+
+  // New guest — show registration screen
+  menuLoading.style.display = 'none';
+  guestRegisterScreen.classList.remove('hidden');
+
+  // Pre-fill restaurant name in form
+  try {
+    const settingsDoc = await getDoc(doc(db, 'settings', 'restaurant'));
+    const name = settingsDoc.exists() ? settingsDoc.data().name : restaurantConfig.name;
+    if (grRestaurantName) grRestaurantName.innerText = `Welcome to ${name}!`;
+  } catch (_) {
+    if (grRestaurantName) grRestaurantName.innerText = `Welcome to ${restaurantConfig.name}!`;
+  }
+
+  if (window.lucide) window.lucide.createIcons();
+
+  // Bind registration form
+  if (guestRegisterForm) {
+    guestRegisterForm.addEventListener('submit', handleGuestRegister);
+  }
+};
+
+// ── Guest Registration Handler ──────────────────────────────────────────────
+const handleGuestRegister = async (e) => {
+  e.preventDefault();
+
+  const name   = grName.value.trim();
+  const mobile = grMobile.value.trim();
+
+  // Validate mobile — must be exactly 10 digits
+  if (!/^[0-9]{10}$/.test(mobile)) {
+    grError.classList.remove('hidden');
+    grErrorText.innerText = 'Please enter a valid 10-digit mobile number.';
+    return;
+  }
+  if (!name) {
+    grError.classList.remove('hidden');
+    grErrorText.innerText = 'Please enter your name.';
+    return;
+  }
+
+  grError.classList.add('hidden');
+  grSubmitBtn.disabled = true;
+  grSubmitBtn.innerHTML = '<div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; animation: spin 1s linear infinite; margin: 0 auto;"></div>';
+
+  try {
+    await saveGuest(mobile, name);
+
+    // Persist to localStorage for next visit
+    localStorage.setItem('ros_guest_mobile', mobile);
+    localStorage.setItem('ros_guest_name', name);
+
+    guestName   = name;
+    guestMobile = mobile;
+
+    // Hide registration, show menu
+    guestRegisterScreen.classList.add('hidden');
     initMenuMode();
+  } catch (err) {
+    grError.classList.remove('hidden');
+    grErrorText.innerText = 'Something went wrong. Please try again.';
+    grSubmitBtn.disabled = false;
+    grSubmitBtn.innerHTML = '<i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i><span>Continue to Menu</span>';
+    if (window.lucide) window.lucide.createIcons();
   }
 };
 
@@ -405,6 +502,8 @@ const handlePlaceOrder = async () => {
     const payload = {
       table_id: tableId || '',
       table_number: tableNumber || 'Takeaway',
+      customer_name: guestName || 'Guest',
+      customer_mobile: guestMobile || '',
       status: 'received',
       items: cart.map(i => ({
         item_id: i.menuItem.id,
