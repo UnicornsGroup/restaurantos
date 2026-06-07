@@ -265,34 +265,59 @@ const initMenuMode = async () => {
       menuRestaurantDesc.innerText = activeSettings.description;
     }
 
-    // 2. Fetch table details if tableId exists & mark table as occupied immediately
+    // 2. Fetch table details if tableId exists & mark table as occupied only if needed (saves writes)
     if (tableId) {
       try {
         const tableDoc = await getDoc(doc(db, 'tables', tableId));
         if (tableDoc.exists()) {
           tableNumber = tableDoc.data().table_number;
-
-          // ── Mark table occupied the moment customer scans QR ──
-          await updateDoc(doc(db, 'tables', tableId), { status: 'occupied' });
+          const currentStatus = tableDoc.data().status;
+          
+          // Only update table to occupied if it isn't already (saves a write)
+          if (currentStatus !== 'occupied') {
+            await updateDoc(doc(db, 'tables', tableId), { status: 'occupied' });
+          }
         }
       } catch (err) {
         console.error('Failed to resolve table number:', err);
       }
     }
 
-    // 3. Fetch Categories
-    const catsSnap = await getDocs(collection(db, 'menu_categories'));
-    categories = catsSnap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => a.display_order - b.display_order);
+    // 3 & 4. Fetch Categories & Available Menu Items (with a 5-minute local cache to save reads)
+    const cacheTime = localStorage.getItem('ros_menu_cache_time');
+    const now = Date.now();
+    let useCache = false;
 
-    // 4. Fetch Available Menu Items
-    const itemsQuery = query(
-      collection(db, 'menu_items'), 
-      where('is_available', '==', true)
-    );
-    const itemsSnap = await getDocs(itemsQuery);
-    menuItems = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (cacheTime && (now - parseInt(cacheTime) < 300000)) { // 5 minutes TTL
+      const cachedCats = localStorage.getItem('ros_menu_categories');
+      const cachedItems = localStorage.getItem('ros_menu_items');
+      if (cachedCats && cachedItems) {
+        categories = JSON.parse(cachedCats);
+        menuItems = JSON.parse(cachedItems);
+        useCache = true;
+      }
+    }
+
+    if (!useCache) {
+      // Fetch Categories from Firestore
+      const catsSnap = await getDocs(collection(db, 'menu_categories'));
+      categories = catsSnap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => a.display_order - b.display_order);
+
+      // Fetch Available Menu Items from Firestore
+      const itemsQuery = query(
+        collection(db, 'menu_items'), 
+        where('is_available', '==', true)
+      );
+      const itemsSnap = await getDocs(itemsQuery);
+      menuItems = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Update local cache
+      localStorage.setItem('ros_menu_categories', JSON.stringify(categories));
+      localStorage.setItem('ros_menu_items', JSON.stringify(menuItems));
+      localStorage.setItem('ros_menu_cache_time', now.toString());
+    }
 
     // 5. Render elements
     renderCategoryTabs();
@@ -552,12 +577,7 @@ const handlePlaceOrder = async () => {
     const docRef = await addDoc(collection(db, 'orders'), payload);
     const newOrderId = docRef.id;
 
-    // Set table to occupied
-    if (tableId) {
-      await updateDoc(doc(db, 'tables', tableId), {
-        status: 'occupied'
-      });
-    }
+    // Table is already occupied from initial load, no need to rewrite status here
 
     // Clear cart
     cart = [];
