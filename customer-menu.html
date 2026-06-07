@@ -97,9 +97,12 @@
           <h1 id="menu-restaurant-name" style="font-size: 20px; font-weight: 700; color: #fff;">Restaurant Menu</h1>
           <p id="menu-restaurant-desc" style="font-size: 11px; color: var(--text-muted); margin-top: 2px; line-clamp: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;"></p>
         </div>
-        <span class="badge badge-success" style="background: hsla(262, 83%, 58%, 0.15); color: var(--primary-hover); border-color: hsla(262, 83%, 58%, 0.25);">
-          QR Menu
-        </span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div id="google_translate_element"></div>
+          <span class="badge badge-success" style="background: hsla(262, 83%, 58%, 0.15); color: var(--primary-hover); border-color: hsla(262, 83%, 58%, 0.25);">
+            QR Menu
+          </span>
+        </div>
       </div>
 
       <!-- Dish Search Input -->
@@ -274,6 +277,18 @@
 
   <!-- Custom Scripts -->
   <script type="module" src="js/customer-menu.js"></script>
+
+  <!-- Google Translate Scripts -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,hi,es,fr,de,zh-CN,ar',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
 </html>
