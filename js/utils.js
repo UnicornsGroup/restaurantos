@@ -27,34 +27,41 @@ export const injectHeader = (activeTabId, currentUser, currentRestaurant) => {
 
       <!-- Header Navigation tabs -->
       <nav class="header-nav">
-        <a href="tables.html" class="tab-btn ${activeTabId === 'tables' ? 'active' : ''}" id="nav-tables">
-          <i data-lucide="layout-grid" style="width: 16px; height: 16px;"></i>
-          <span>Tables</span>
-        </a>
-        <a href="order.html" class="tab-btn ${activeTabId === 'order' ? 'active' : ''}" id="nav-order">
-          <i data-lucide="shopping-cart" style="width: 16px; height: 16px;"></i>
-          <span>POS Billing</span>
-        </a>
-        <a href="kitchen.html" class="tab-btn ${activeTabId === 'kitchen' ? 'active' : ''}" id="nav-kitchen">
-          <i data-lucide="chef-hat" style="width: 16px; height: 16px;"></i>
-          <span>Kitchen KDS</span>
-        </a>
-        <a href="menu-builder.html" class="tab-btn ${activeTabId === 'menu-builder' ? 'active' : ''}" id="nav-menu">
-          <i data-lucide="book-open" style="width: 16px; height: 16px;"></i>
-          <span>Menu</span>
-        </a>
-        <a href="table-setup.html" class="tab-btn ${activeTabId === 'table-setup' ? 'active' : ''}" id="nav-qr">
-          <i data-lucide="qr-code" style="width: 16px; height: 16px;"></i>
-          <span>QR Setup</span>
-        </a>
-        <a href="dashboard.html" class="tab-btn ${activeTabId === 'dashboard' ? 'active' : ''}" id="nav-dashboard">
-          <i data-lucide="bar-chart-3" style="width: 16px; height: 16px;"></i>
-          <span>Dashboard</span>
-        </a>
-        <a href="settings.html" class="tab-btn ${activeTabId === 'settings' ? 'active' : ''}" id="nav-settings" style="opacity: 0.8;">
-          <i data-lucide="settings-2" style="width: 16px; height: 16px;"></i>
-          <span>Settings</span>
-        </a>
+        ${currentUser?.role === 'kitchen' ? `
+          <a href="kitchen.html" class="tab-btn ${activeTabId === 'kitchen' ? 'active' : ''}" id="nav-kitchen">
+            <i data-lucide="chef-hat" style="width: 16px; height: 16px;"></i>
+            <span>Kitchen KDS</span>
+          </a>
+        ` : `
+          <a href="tables.html" class="tab-btn ${activeTabId === 'tables' ? 'active' : ''}" id="nav-tables">
+            <i data-lucide="layout-grid" style="width: 16px; height: 16px;"></i>
+            <span>Tables</span>
+          </a>
+          <a href="order.html" class="tab-btn ${activeTabId === 'order' ? 'active' : ''}" id="nav-order">
+            <i data-lucide="shopping-cart" style="width: 16px; height: 16px;"></i>
+            <span>POS Billing</span>
+          </a>
+          <a href="kitchen.html" class="tab-btn ${activeTabId === 'kitchen' ? 'active' : ''}" id="nav-kitchen">
+            <i data-lucide="chef-hat" style="width: 16px; height: 16px;"></i>
+            <span>Kitchen KDS</span>
+          </a>
+          <a href="menu-builder.html" class="tab-btn ${activeTabId === 'menu-builder' ? 'active' : ''}" id="nav-menu">
+            <i data-lucide="book-open" style="width: 16px; height: 16px;"></i>
+            <span>Menu</span>
+          </a>
+          <a href="table-setup.html" class="tab-btn ${activeTabId === 'table-setup' ? 'active' : ''}" id="nav-qr">
+            <i data-lucide="qr-code" style="width: 16px; height: 16px;"></i>
+            <span>QR Setup</span>
+          </a>
+          <a href="dashboard.html" class="tab-btn ${activeTabId === 'dashboard' ? 'active' : ''}" id="nav-dashboard">
+            <i data-lucide="bar-chart-3" style="width: 16px; height: 16px;"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="settings.html" class="tab-btn ${activeTabId === 'settings' ? 'active' : ''}" id="nav-settings" style="opacity: 0.8;">
+            <i data-lucide="settings-2" style="width: 16px; height: 16px;"></i>
+            <span>Settings</span>
+          </a>
+        `}
       </nav>
     </div>
 

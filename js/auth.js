@@ -80,6 +80,15 @@ export const initAuthGuard = (activeTabId, onAuthSuccess) => {
         // Cache settings locally for fast fallback
         localStorage.setItem('settings_restaurant', JSON.stringify(currentRestaurant));
         
+        // 2.5. Role-based Route Guard: Kitchen staff can ONLY access kitchen.html
+        if (currentUser.role === 'kitchen') {
+          const path = window.location.pathname;
+          if (!path.includes('kitchen.html')) {
+            window.location.href = "kitchen.html";
+            return;
+          }
+        }
+        
         // 3. Dynamically inject navigation layout header on protected staff views
         if (isCurrentPageProtected()) {
           const { injectHeader } = await import('./utils.js');
