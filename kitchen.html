@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RestaurantOS — Kitchen Display System (KDS)</title>
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/kitchen.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Navigation Dynamic Header Target -->
+    <header class="main-header"></header>
+
+    <!-- Main Workspace Content -->
+    <main class="main-content">
+        <div class="dashboard-panel">
+        <div style="margin-bottom: 24px;">
+          <h2 style="font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 4px;">Kitchen Display (KDS) Feed</h2>
+          <p style="font-size: 13px; color: var(--text-muted);">Live incoming order cards and food preparation status</p>
+        </div>
+
+        <div id="kds-grid" class="kds-grid">
+          <!-- Live orders queue populated dynamically from js/kitchen.js -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/kitchen.js"></script>
+
+</body>
+</html>

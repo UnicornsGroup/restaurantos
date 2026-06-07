@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Settings — RestaurantOS</title>
+  <meta name="description" content="Manage your restaurant business profile, logo, currency and operations settings.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Shared Navigation Header (injected by auth.js) -->
+  <header class="main-header" id="shared-header"></header>
+  
+  <!-- ========================= PAGE MAIN ========================= -->
+  <main class="page-main dashboard-panel">
+
+    <div class="section-header">
+      <h1>Business Settings</h1>
+      <p>Edit your restaurant's public profile, branding, and POS configuration.</p>
+    </div>
+
+    <!-- Success & Error Alerts -->
+    <div id="settings-alert-success" class="hidden" style="background: var(--success-glow); border: 1px solid hsla(160, 70%, 40%, 0.3); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--success); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+      <i data-lucide="check-circle-2" style="width: 15px; height: 15px; flex-shrink: 0;"></i>
+      <span>Settings saved.</span>
+    </div>
+    <div id="settings-alert-error" class="hidden" style="background: var(--danger-glow); border: 1px solid hsla(346, 80%, 55%, 0.3); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--danger); margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+      <i data-lucide="alert-circle" style="width: 15px; height: 15px; flex-shrink: 0;"></i>
+      <span>Save failed.</span>
+    </div>
+
+    <!-- ——— SETTINGS FORM ——— -->
+    <form id="settings-form" style="display: flex; flex-direction: column; gap: 28px;">
+      
+      <!-- Business Identity -->
+      <div class="glass-panel" style="padding: 28px 32px; display: flex; flex-direction: column; gap: 24px;">
+        <div class="section-header" style="margin: 0; padding: 0; border: none;">
+          <h2 style="font-size: 16px;">
+            <i data-lucide="store" style="width: 18px; height: 18px;"></i>
+            Restaurant Profile
+          </h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div>
+            <label for="set-rest-name">Restaurant Name <span style="color: var(--danger);">*</span></label>
+            <input type="text" id="set-rest-name" required placeholder="e.g. The Grand Bistro" maxlength="80">
+          </div>
+          <div>
+            <label for="set-rest-currency">Currency Symbol</label>
+            <input type="text" id="set-rest-currency" placeholder="₹" maxlength="4" value="₹">
+          </div>
+        </div>
+
+        <div>
+          <label for="set-rest-desc">Short Tagline or Address (optional)</label>
+          <input type="text" id="set-rest-desc" placeholder="e.g. 23-B, Koregaon Park, Pune | Pure Veg | Since 2012" maxlength="160">
+        </div>
+      </div>
+
+      <!-- Branding & Logo -->
+      <div class="glass-panel" style="padding: 28px 32px; display: flex; flex-direction: column; gap: 24px;">
+        <div class="section-header" style="margin: 0; padding: 0; border: none;">
+          <h2 style="font-size: 16px;">
+            <i data-lucide="image" style="width: 18px; height: 18px;"></i>
+            Branding & Logo
+          </h2>
+        </div>
+
+        <div>
+          <label for="set-rest-logo">Logo Image URL</label>
+          <input type="url" id="set-rest-logo" placeholder="https://your-cdn.com/logo.png">
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+            Use an HTTPS image URL. Recommended: 128×128px square PNG or WebP.
+            You can host your image free at <a href="https://imgur.com" target="_blank" style="color: var(--primary-hover); text-decoration: none;">imgur.com</a> or <a href="https://imgbb.com" target="_blank" style="color: var(--primary-hover); text-decoration: none;">imgbb.com</a>.
+          </p>
+        </div>
+
+        <!-- Live preview -->
+        <div id="logo-preview" style="display: none; align-items: center; gap: 16px; background: hsla(222, 47%, 4%, 0.6); border: 1px solid var(--border-color); padding: 14px 18px; border-radius: 12px; font-size: 12px; color: var(--text-muted);">
+          <img id="logo-preview-img" src="" alt="Logo Preview" style="width: 56px; height: 56px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border-color);">
+          <span>Logo preview — this is how it will appear on the navigation header and receipts.</span>
+        </div>
+      </div>
+
+      <!-- Advanced Config -->
+      <div class="glass-panel" style="padding: 28px 32px; display: flex; flex-direction: column; gap: 24px;">
+        <div class="section-header" style="margin: 0; padding: 0; border: none;">
+          <h2 style="font-size: 16px;">
+            <i data-lucide="cog" style="width: 18px; height: 18px;"></i>
+            Advanced Options
+          </h2>
+        </div>
+
+        <div>
+          <label for="set-rest-slug">Restaurant URL Slug (read-only, auto-generated)</label>
+          <input type="text" id="set-rest-slug" placeholder="the-grand-bistro" readonly style="cursor: not-allowed; opacity: 0.65;">
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Used in QR code customer menu URLs. Automatically generated from restaurant name.</p>
+        </div>
+      </div>
+
+      <!-- Submit CTA -->
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary" style="padding: 12px 32px;">
+          <i data-lucide="save" style="width: 16px; height: 16px;"></i>
+          <span>Save Business Settings</span>
+        </button>
+      </div>
+    </form>
+  </main>
+  
+  <!-- ES MODULE SCRIPTS -->
+  <script type="module" src="js/settings.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+    });
+  </script>
+
+</body>
+</html>

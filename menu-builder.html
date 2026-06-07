@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RestaurantOS — Menu Management</title>
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    /* Subtab buttons */
+    .menu-tabs {
+      display: flex;
+      gap: 24px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+    .menu-tabs button {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      padding-bottom: 6px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      font-family: var(--font-sans);
+    }
+    .menu-tabs button:hover {
+      color: var(--text-main);
+    }
+    .menu-tabs button.active {
+      color: var(--primary-hover);
+      border-bottom-color: var(--primary);
+    }
+    
+    /* Menu cards */
+    .menu-item-card {
+      padding: 20px;
+      border-radius: 16px;
+      transition: all 0.2s ease;
+    }
+    .menu-item-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-hover);
+    }
+    
+    /* Tables design overrides */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 14px 16px;
+      font-size: 14px;
+    }
+    
+    /* Toggle switch logic styles override */
+    .toggle-availability-btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Navigation Dynamic Header Target -->
+    <header class="main-header"></header>
+
+    <!-- Main Workspace Content -->
+    <main class="main-content">
+      <div class="dashboard-panel">
+        
+        <!-- Header & Tabs -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+          <div class="menu-tabs">
+            <button id="menu-items-subtab" class="active">Menu Items</button>
+            <button id="menu-cats-subtab">Categories</button>
+          </div>
+
+          <div id="menu-actions-wrapper">
+            <button id="add-item-btn" class="btn btn-primary">
+              <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+              <span>Create Dish</span>
+            </button>
+            <button id="add-category-btn" class="btn btn-primary hidden">
+              <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+              <span>Add Category</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Subtab 1: Items Grid Wrapper -->
+        <div id="items-grid-wrapper">
+          <div id="items-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+            <!-- Dynamically populated menu items from js/menu-builder.js -->
+          </div>
+        </div>
+
+        <!-- Subtab 2: Categories Table Wrapper -->
+        <div id="cats-table-wrapper" class="glass-panel hidden" style="overflow: hidden;">
+          <div style="overflow-x: auto;">
+            <table>
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); text-align: left; font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); background: hsla(222, 47%, 2%, 0.4);">
+                  <th>Category Name</th>
+                  <th>Display Order</th>
+                  <th>Printer Routing</th>
+                  <th style="text-align: right; padding-right: 24px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="category-list-body">
+                <!-- Dynamically populated categories from js/menu-builder.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal A: Add Menu Category -->
+  <div id="category-modal" class="modal-backdrop">
+    <div class="glass-panel modal-content" style="position: relative;">
+      <button id="close-category-modal" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+      </button>
+      <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 16px;">Add Menu Category</h3>
+      <form id="category-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <div>
+          <label for="cat-name">Category Name</label>
+          <input type="text" id="cat-name" required placeholder="e.g. Starters">
+        </div>
+        <div>
+          <label for="cat-order">Display Sorting Order</label>
+          <input type="number" id="cat-order" required value="1" min="1">
+        </div>
+        <div>
+          <label for="cat-routing">Kitchen Printers/Display Routing</label>
+          <select id="cat-routing">
+            <option value="kitchen">Main Kitchen</option>
+            <option value="bar">Bar Display</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Add Category</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal B: Create/Edit Menu Item -->
+  <div id="item-modal" class="modal-backdrop">
+    <div class="glass-panel modal-content" style="position: relative; max-width: 500px; max-height: 90vh; overflow-y: auto;">
+      <button id="close-item-modal" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+      </button>
+      <h3 id="item-modal-title" style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 16px;">Create New Dish</h3>
+      
+      <form id="item-form" style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label for="item-name">Dish Name</label>
+            <input type="text" id="item-name" required placeholder="e.g. Butter Chicken">
+          </div>
+          <div>
+            <label for="item-price">Price</label>
+            <input type="number" id="item-price" required placeholder="250.00" min="0" step="0.01">
+          </div>
+        </div>
+
+        <div>
+          <label for="item-category-id">Category</label>
+          <select id="item-category-id">
+            <!-- Dynamically populated categories dropdown -->
+          </select>
+        </div>
+
+        <div>
+          <label for="item-desc">Description / Description Tags</label>
+          <textarea id="item-desc" rows="2" placeholder="Describe the ingredients, spice level..."></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label for="item-tags">Tags (Comma Sep)</label>
+            <input type="text" id="item-tags" placeholder="Veg, Bestseller">
+          </div>
+          <div>
+            <label for="item-prep">Prep Time (Mins)</label>
+            <input type="number" id="item-prep" required value="15" min="1">
+          </div>
+        </div>
+
+        <div>
+          <label for="item-allergens">Allergens (Comma Sep)</label>
+          <input type="text" id="item-allergens" placeholder="Dairy, Nuts, Gluten">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Save Dish Configurations</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/menu-builder.js"></script>
+
+</body>
+</html>

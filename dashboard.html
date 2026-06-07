@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RestaurantOS — Owner Analytics Dashboard</title>
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Navigation Dynamic Header Target -->
+    <header class="main-header"></header>
+
+    <!-- Main Workspace Content -->
+    <main class="main-content">
+      <div class="dashboard-grid">
+        
+        <!-- Page Header -->
+        <div style="margin-bottom: 8px;">
+          <h2 style="font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 4px;">Owner Analytics</h2>
+          <p style="font-size: 13px; color: var(--text-muted);">Real-time monitoring of POS sales, kitchen performance, and occupancy</p>
+        </div>
+
+        <!-- KPI Cards Row -->
+        <div class="stats-row">
+          <div class="glass-panel kpi-card">
+            <div class="kpi-icon-wrapper" style="background: hsla(142, 70%, 45%, 0.15); color: var(--success);">
+              <i data-lucide="banknote" style="width: 24px; height: 24px;"></i>
+            </div>
+            <div>
+              <div class="kpi-title">Sales Today</div>
+              <div id="metric-sales" class="kpi-value">₹0.00</div>
+            </div>
+          </div>
+
+          <div class="glass-panel kpi-card">
+            <div class="kpi-icon-wrapper" style="background: hsla(190, 90%, 48%, 0.15); color: var(--secondary);">
+              <i data-lucide="users" style="width: 24px; height: 24px;"></i>
+            </div>
+            <div>
+              <div class="kpi-title">Table Occupancy</div>
+              <div id="metric-tables" class="kpi-value">0/0</div>
+            </div>
+          </div>
+
+          <div class="glass-panel kpi-card">
+            <div class="kpi-icon-wrapper" style="background: hsla(262, 83%, 58%, 0.15); color: var(--primary-hover);">
+              <i data-lucide="shopping-bag" style="width: 24px; height: 24px;"></i>
+            </div>
+            <div>
+              <div class="kpi-title">Orders Today</div>
+              <div id="metric-orders" class="kpi-value">0</div>
+            </div>
+          </div>
+
+          <div class="glass-panel kpi-card">
+            <div class="kpi-icon-wrapper" style="background: hsla(346, 80%, 55%, 0.15); color: var(--danger);">
+              <i data-lucide="chef-hat" style="width: 24px; height: 24px;"></i>
+            </div>
+            <div>
+              <div class="kpi-title">Active Kitchen</div>
+              <div id="metric-kds" class="kpi-value">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Graphs & Recent Transactions Grid -->
+        <div class="charts-grid">
+          <!-- 7-Day Sales Volume Graph -->
+          <div class="glass-panel chart-card">
+            <h3 style="font-size: 16px; font-weight: 700; color: #fff;">Sales Revenue (Last 7 Days)</h3>
+            <div class="chart-container">
+              <canvas id="sales-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Recent Activity Transactions Table -->
+          <div class="glass-panel chart-card" style="overflow: hidden;">
+            <h3 style="font-size: 16px; font-weight: 700; color: #fff;">Recent Receipts</h3>
+            <div class="transactions-table-wrapper">
+              <table class="transactions-table">
+                <thead>
+                  <tr>
+                    <th>Bill #</th>
+                    <th>Table</th>
+                    <th>Time</th>
+                    <th style="text-align: right;">Amount</th>
+                    <th style="text-align: right;">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-orders-list">
+                  <!-- Dynamically populated transaction rows -->
+                  <tr>
+                    <td colspan="5" class="text-xs text-slate-500 py-6 text-center" style="color: var(--text-muted); text-align: center;">No transactions completed yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/dashboard.js"></script>
+
+</body>
+</html>

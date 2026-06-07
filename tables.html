@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RestaurantOS — Table Mapping</title>
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/tables.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Navigation Dynamic Header Target -->
+    <header class="main-header"></header>
+
+    <!-- Main Workspace Content -->
+    <main class="main-content">
+      <div class="dashboard-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <div>
+            <h2 style="font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 4px;">Table Mapping</h2>
+            <p style="font-size: 13px; color: var(--text-muted);">Manage seating plans and table-specific QR ordering codes</p>
+          </div>
+          <button id="add-table-btn" class="btn btn-primary">
+            <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+            <span>Add Seating</span>
+          </button>
+        </div>
+        
+        <div id="table-grid" class="table-grid">
+          <!-- Dynamically populated tables from js/tables.js -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal A: Add Table configuration -->
+  <div id="table-modal" class="modal-backdrop">
+    <div class="glass-panel modal-content" style="position: relative;">
+      <button id="close-table-modal" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+      </button>
+      <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 16px;">Add New Table</h3>
+      <div id="table-error" class="hidden" style="color: var(--danger); font-size: 12px; background: var(--danger-glow); border: 1px solid hsla(346, 80%, 55%, 0.3); padding: 10px; border-radius: 8px; margin-bottom: 12px;"></div>
+      <form id="table-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <div>
+          <label for="table-number">Table Name/Number</label>
+          <input type="text" id="table-number" required placeholder="e.g. Table 04">
+        </div>
+        <div>
+          <label for="table-capacity">Seating Capacity (Guests)</label>
+          <input type="number" id="table-capacity" required value="4" min="1">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Create Table Config</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal B: QR Viewer download card -->
+  <div id="qr-modal" class="modal-backdrop">
+    <div class="glass-panel modal-content" style="position: relative; text-align: center; max-width: 380px;">
+      <button id="close-qr-modal" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+      </button>
+      <h3 style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px;">Table QR Code</h3>
+      <p id="qr-table-name" style="font-size: 12px; color: var(--text-muted); margin-bottom: 24px;">Table 01</p>
+
+      <div style="background: #fff; padding: 16px; border-radius: 16px; width: 192px; height: 192px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);">
+        <img id="qr-image" src="" alt="Table QR Link" style="width: 176px; height: 176px; object-fit: contain;">
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <button onclick="downloadQrCode()" class="btn btn-secondary" style="width: 100%;">
+          <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
+          <span>Open QR Image</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/tables.js"></script>
+
+</body>
+</html>

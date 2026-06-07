@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Restaurants Collection Rules
+    match /restaurants/{restaurantId} {
+      allow read: if true; // Publicly readable for slug verification
+      allow write: if request.auth != null; // Onboarded owners can write
+    }
+
+    // Users Collection Rules
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Tables Collection Rules
+    match /tables/{tableId} {
+      allow read: if true; // Public table details readable by guests scanning QR
+      allow write: if true; // Allows guests to update table occupancy to occupied, and staff to write
+    }
+
+    // Menu Categories Collection Rules
+    match /menu_categories/{catId} {
+      allow read: if true; // Public menu categories readable by guests
+      allow write: if request.auth != null; // Managed by staff
+    }
+
+    // Menu Items Collection Rules
+    match /menu_items/{itemId} {
+      allow read: if true; // Public menu items readable by guests
+      allow write: if request.auth != null; // Managed by staff
+    }
+
+    // Orders Collection Rules
+    match /orders/{orderId} {
+      allow read, write: if true; // Anyone can submit an order and listen to status changes
+    }
+
+    // Settings Collection Rules
+    match /settings/{settingsId} {
+      allow read: if true; // Publicly readable
+      allow write: if request.auth != null; // Only authenticated staff can edit
+    }
+  }
+}

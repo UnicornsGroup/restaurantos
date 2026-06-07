@@ -1,0 +1,19 @@
+# Dependency folders
+node_modules/
+.npm/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor config
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build output (if added later)
+dist/
+build/

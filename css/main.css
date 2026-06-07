@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --font-sans: 'Outfit', sans-serif;
+
+  /* HSL Color System - Theme Tokens */
+  --bg-main: hsl(222, 47%, 4%);
+  --bg-card: hsla(220, 39%, 9%, 0.7);
+  --border-color: hsla(217, 30%, 18%, 0.6);
+  --border-hover: hsla(217, 30%, 28%, 0.8);
+  
+  --primary: hsl(262, 83%, 58%);
+  --primary-hover: hsl(262, 83%, 68%);
+  --primary-glow: hsla(262, 83%, 58%, 0.35);
+
+  --secondary: hsl(190, 90%, 48%);
+  --success: hsl(142, 70%, 45%);
+  --success-glow: hsla(142, 70%, 45%, 0.2);
+  --danger: hsl(346, 80%, 55%);
+  --danger-glow: hsla(346, 80%, 55%, 0.2);
+
+  --text-main: hsl(210, 40%, 98%);
+  --text-muted: hsl(215, 20%, 65%);
+  --text-dark: hsl(215, 25%, 27%);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Background ambient glows */
+body::before, body::after {
+  content: '';
+  position: absolute;
+  width: 50vw;
+  height: 50vw;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(120px);
+  opacity: 0.15;
+}
+body::before {
+  top: -10vw;
+  right: -10vw;
+  background-color: var(--primary);
+}
+body::after {
+  bottom: -10vw;
+  left: -10vw;
+  background-color: var(--secondary);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-dark);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Typography utilities */
+h1, h2, h3, h4, h5 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Utilities */
+.hidden {
+  display: none !important;
+}
+
+/* Keyframes animations */
+@keyframes slideUp {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Generic page panels  */
+.dashboard-panel {
+  padding: 32px;
+}
+
+/* Min height pages */
+.min-h-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+

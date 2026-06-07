@@ -1,0 +1,88 @@
+/* Kitchen Display System layout */
+.kds-grid {
+  display: grid;
+  grid-template-cols: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.kds-ticket {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* Status borders matching prep times */
+.kds-ticket.received {
+  border-top: 4px solid var(--secondary);
+}
+.kds-ticket.preparing {
+  border-top: 4px solid var(--primary);
+}
+.kds-ticket.ready {
+  border-top: 4px solid var(--success);
+}
+
+.kds-ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.kds-ticket-time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.kds-ticket-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kds-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: hsla(217, 30%, 18%, 0.2);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.kds-item-row:hover {
+  background: hsla(217, 30%, 28%, 0.3);
+}
+.kds-item-row.completed {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.kds-item-qty {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.kds-ticket-notes {
+  background: hsla(262, 83%, 18%, 0.15);
+  border: 1px solid hsla(262, 83%, 38%, 0.2);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--primary-hover);
+  font-style: italic;
+}
+
+.kds-ticket-footer {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  margin-top: auto;
+}

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital QR Menu & Tracker</title>
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/customer-menu.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="pb-24">
+
+  <!-- 1. LOADING SCREEN -->
+  <div id="menu-loading" class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div style="width: 32px; height: 32px; border-radius: 50%; border: 4px solid hsla(262, 83%, 58%, 0.15); border-top-color: var(--primary); animation: spin 1s linear infinite; margin-bottom: 16px;"></div>
+    <p style="font-size: 14px; color: var(--text-muted);">Accessing restaurant menu...</p>
+  </div>
+
+  <!-- 2. ERROR STATE PANEL -->
+  <div id="menu-error" class="min-h-screen flex flex-col items-center justify-center p-6 text-center hidden animate-slide-up">
+    <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--danger-glow); border: 1px solid hsla(346, 80%, 55%, 0.3); display: flex; align-items: center; justify-content: center; color: var(--danger); margin-bottom: 16px;">
+      <i data-lucide="alert-triangle" style="width: 24px; height: 24px;"></i>
+    </div>
+    <h3 style="font-size: 18px; font-weight: 700; color: #fff;">System Error</h3>
+    <p id="error-message" style="font-size: 12px; color: var(--text-muted); mt-2; max-width: 280px; line-height: 1.6; margin: 8px auto 0;">Could not load restaurant menu. Please try scanning the QR code again.</p>
+    <button onclick="window.location.reload()" class="btn btn-primary" style="margin-top: 24px;">Retry Scan</button>
+  </div>
+
+  <!-- 3. ORDER COMPLETED SCREEN -->
+  <div id="order-completed-panel" class="min-h-screen flex flex-col items-center justify-center p-6 text-center hidden animate-slide-up">
+    <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--success-glow); border: 1px solid hsla(142, 70%, 45%, 0.3); display: flex; align-items: center; justify-content: center; color: var(--success); margin-bottom: 24px; animation: pulse 2s infinite;">
+      <i data-lucide="shield-check" style="width: 32px; height: 32px;"></i>
+    </div>
+    <h3 style="font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 8px;">Order Placed!</h3>
+    <p style="font-size: 13px; color: var(--text-muted); max-width: 280px; line-height: 1.6; margin: 0 auto;">
+      Your order has been routed to the kitchen. You can track progress in real-time.
+    </p>
+    <button id="track-order-btn" class="btn btn-primary" style="margin-top: 32px; padding: 14px 28px;">
+      <span>Track Order Status</span>
+      <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+    </button>
+  </div>
+
+  <!-- 4. GUEST MENU CATALOG PANELS -->
+  <div id="menu-container" class="hidden animate-slide-up">
+    <!-- Header with logo, description and categories filter -->
+    <header class="glass-panel" style="padding: 20px; border-radius: 0; border-x: none; border-top: none; position: sticky; top: 0; z-index: 30; background: hsla(222, 47%, 4%, 0.95); backdrop-filter: blur(12px); display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <img id="menu-restaurant-logo" style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover; border: 1px solid hsla(262, 83%, 58%, 0.2); display: none;" alt="Logo">
+        <div style="flex: 1;">
+          <h1 id="menu-restaurant-name" style="font-size: 20px; font-weight: 700; color: #fff;">Restaurant Menu</h1>
+          <p id="menu-restaurant-desc" style="font-size: 11px; color: var(--text-muted); margin-top: 2px; line-clamp: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;"></p>
+        </div>
+        <span class="badge badge-success" style="background: hsla(262, 83%, 58%, 0.15); color: var(--primary-hover); border-color: hsla(262, 83%, 58%, 0.25);">
+          QR Menu
+        </span>
+      </div>
+
+      <!-- Dish Search Input -->
+      <div style="position: relative;">
+        <i data-lucide="search" style="position: absolute; left: 14px; top: 12px; width: 16px; height: 16px; color: var(--text-muted);"></i>
+        <input
+          type="text"
+          id="menu-search-input"
+          placeholder="Search dishes or categories..."
+          style="padding-left: 40px; width: 100%;"
+        >
+      </div>
+
+      <!-- Categories tabs -->
+      <div id="menu-category-tabs" class="categories-scroll" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
+        <!-- Dynamically populated categories buttons -->
+      </div>
+    </header>
+
+    <!-- Menu Dishes Card List -->
+    <div id="menu-items-list" style="max-width: 500px; width: 100%; margin: 24px auto; padding: 0 16px; display: flex; flex-direction: column; gap: 16px;">
+      <!-- Dynamically populated dish cards -->
+    </div>
+  </div>
+
+  <!-- 5. FLOATING CART PREVIEW BAR -->
+  <div id="floating-cart-bar" class="fixed-cart-bar hidden animate-slide-up" style="position: fixed; bottom: 24px; left: 16px; right: 16px; z-index: 40; max-width: 460px; margin: 0 auto; width: calc(100% - 32px);">
+    <button id="open-cart-btn" class="btn btn-primary" style="width: 100%; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; position: relative; display: flex; align-items: center;">
+          <i data-lucide="shopping-bag" style="width: 20px; height: 20px;"></i>
+          <span id="cart-counter" style="position: absolute; top: -6px; right: -6px; background: var(--danger); color: #fff; font-size: 9px; font-weight: 800; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px;">0</span>
+        </div>
+        <div style="text-align: left;">
+          <span style="font-size: 11px; color: rgba(255,255,255,0.8); display: block;">Review active order</span>
+          <span id="cart-total-price" style="font-size: 14px; font-weight: 700;">Subtotal: ₹0.00</span>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700;">
+        <span>View Cart</span>
+        <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+      </div>
+    </button>
+  </div>
+
+  <!-- 6. SLIDING CART DRAWER MODAL -->
+  <div id="cart-modal-backdrop" class="modal-backdrop" style="align-items: flex-end; padding: 0;">
+    <div id="cart-drawer" class="cart-drawer glass-panel" style="width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; border-x: none; border-bottom: none; display: flex; flex-direction: column; max-height: 85vh; padding: 24px;">
+      
+      <!-- Drawer Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; shrink-0;">
+        <h3 style="font-size: 18px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="shopping-bag" style="color: var(--primary-hover); width: 20px; height: 20px;"></i>
+          <span>Your Selection Cart</span>
+        </h3>
+        <button id="close-cart-btn" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+          <i data-lucide="x" style="width: 22px; height: 22px;"></i>
+        </button>
+      </div>
+
+      <!-- Items in cart container scrollable -->
+      <div id="cart-items-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
+        <!-- Dynamically populated cart rows -->
+      </div>
+
+      <!-- Action Panel -->
+      <div style="border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 16px; shrink-0; display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 14px; color: var(--text-muted);">Subtotal (Tax Extra)</span>
+          <span id="drawer-subtotal" style="font-size: 18px; font-weight: 700; color: #fff;">₹0.00</span>
+        </div>
+        <button id="place-order-btn" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 14px; font-weight: 750;">
+          <span>Send Order to Kitchen</span>
+          <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 7. CHEF INSTRUCTIONS NOTE MODAL -->
+  <div id="instruction-modal" class="modal-backdrop" style="z-index: 2000;">
+    <div class="glass-panel modal-content" style="position: relative;">
+      <button id="close-instruction-modal" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+      </button>
+      <h3 style="font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 2px;">Add Chef Note</h3>
+      <p id="instruction-dish-name" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Dish Name</p>
+
+      <textarea id="instruction-textarea" placeholder="e.g. less oil, make it mild spicy, gluten-free option..." style="min-height: 90px; width: 100%; margin-bottom: 16px; resize: none;"></textarea>
+
+      <button id="save-instruction-btn" class="btn btn-primary" style="width: 100%;">Save Note</button>
+    </div>
+  </div>
+
+  <!-- 8. ACTIVE ORDER STATUS LIVE TRACKER CONTAINER -->
+  <div id="tracker-container" class="hidden animate-slide-up" style="max-width: 480px; width: 100%; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 20px;">
+    <!-- Tracker Header -->
+    <header class="glass-panel" style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--primary), hsl(262, 83%, 38%)); display: flex; align-items: center; justify-content: center; color: #fff;">
+          <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+        </div>
+        <div>
+          <h4 style="font-size: 14px; font-weight: 700; color: #fff;">Order Status</h4>
+          <p id="tracker-order-id" style="font-size: 10px; color: var(--text-muted); margin-top: 1px;">ID: #ORDERID</p>
+        </div>
+      </div>
+      <span id="tracker-table-number" class="badge badge-success" style="background: hsla(190, 90%, 48%, 0.15); color: var(--secondary); border-color: hsla(190, 90%, 48%, 0.25);">Table 01</span>
+    </header>
+
+    <!-- Tracking Progress Card -->
+    <div class="glass-panel" style="padding: 24px; text-align: center;">
+      <span style="font-size: 11px; font-weight: 700; color: var(--primary-hover); text-transform: uppercase; letter-spacing: 0.1em;">Live Stage</span>
+      <h2 id="tracker-status-text" style="font-size: 28px; font-weight: 800; color: #fff; margin-top: 4px; margin-bottom: 24px;">Received</h2>
+
+      <!-- Progress Steps Bar -->
+      <div id="progress-steps-bar" style="display: flex; justify-content: space-between; align-items: center; position: relative; margin: 0 8px 24px;">
+        <!-- Connector line background -->
+        <div style="position: absolute; top: 18px; left: 16px; right: 16px; height: 2px; background: var(--border-color); z-index: 1;"></div>
+        <!-- Connector line fill -->
+        <div id="progress-line-fill" style="position: absolute; top: 18px; left: 16px; height: 2px; background: var(--primary); z-index: 2; transition: all 0.5s ease; width: 0%;"></div>
+
+        <!-- Node 1: Received -->
+        <div class="step-node" data-step="0" style="display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 3; position: relative;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-main); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.3s ease;">
+            <i data-lucide="receipt" style="width: 16px; height: 16px;"></i>
+          </div>
+          <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Received</span>
+        </div>
+
+        <!-- Node 2: Preparing -->
+        <div class="step-node" data-step="1" style="display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 3; position: relative;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-main); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.3s ease;">
+            <i data-lucide="chef-hat" style="width: 16px; height: 16px;"></i>
+          </div>
+          <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Preparing</span>
+        </div>
+
+        <!-- Node 3: Ready -->
+        <div class="step-node" data-step="2" style="display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 3; position: relative;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-main); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.3s ease;">
+            <i data-lucide="package-check" style="width: 16px; height: 16px;"></i>
+          </div>
+          <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Ready</span>
+        </div>
+
+        <!-- Node 4: Served -->
+        <div class="step-node" data-step="3" style="display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 3; position: relative;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-main); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.3s ease;">
+            <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
+          </div>
+          <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Served</span>
+        </div>
+      </div>
+
+      <!-- Items Checklist -->
+      <div style="border-top: 1px solid var(--border-color); padding-top: 20px; text-align: left;">
+        <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 12px;">Dishes Ordered</h4>
+        <div id="tracker-items-list" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Dynamically populated ordered items -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Back to Menu navigation button -->
+    <button id="tracker-back-btn" class="btn btn-secondary" style="width: 100%; padding: 12px; font-size: 13px; font-weight: 600;">
+      <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>
+      <span>Back to Menu Selection</span>
+    </button>
+  </div>
+
+  <!-- Custom Scripts -->
+  <script type="module" src="js/customer-menu.js"></script>
+
+</body>
+</html>

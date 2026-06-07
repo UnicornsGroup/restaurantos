@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RestaurantOS Onboarding Wizard</title>
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="auth-container">
+    <div id="setup-card" class="glass-panel animate-slide-up" style="width: 100%; max-width: 600px; padding: 36px;">
+      <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; text-align: center;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), hsl(262, 83%, 38%)); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px var(--primary-glow); margin-bottom: 12px;">
+          <i data-lucide="chef-hat" style="width: 22px; height: 22px; color: #fff;"></i>
+        </div>
+        <h2 style="font-size: 24px; font-weight: 700; color: #fff;">Setup Wizard</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Initialize your single-restaurant terminal portal and create owner credentials</p>
+      </div>
+
+      <div id="setup-error" class="hidden" style="color: var(--danger); font-size: 12px; background: var(--danger-glow); border: 1px solid hsla(346, 80%, 55%, 0.3); padding: 12px; border-radius: 8px; margin-bottom: 16px;"></div>
+      <div id="setup-success" class="hidden" style="color: var(--success); font-size: 12px; background: var(--success-glow); border: 1px solid hsla(142, 70%, 45%, 0.3); padding: 12px; border-radius: 8px; margin-bottom: 16px;"></div>
+
+      <form id="setup-form" style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Step 1: Restaurant Configurations -->
+        <div>
+          <h3 style="font-size: 14px; font-weight: 700; color: var(--primary-hover); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 12px;">1. Business Details</h3>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div>
+              <label for="setup-name">Restaurant Name</label>
+              <input type="text" id="setup-name" required placeholder="e.g. Spice Palace">
+            </div>
+            <div>
+              <label for="setup-desc">Description / Tagline</label>
+              <input type="text" id="setup-desc" placeholder="e.g. Vibrant dark-themed coffee & food experience">
+            </div>
+            <div style="display: grid; grid-template-cols: 1fr 1fr; gap: 12px;">
+              <div>
+                <label for="setup-logo">Logo URL</label>
+                <input type="url" id="setup-logo" placeholder="https://images.unsplash.com/...">
+              </div>
+              <div>
+                <label for="setup-currency">Currency Symbol</label>
+                <input type="text" id="setup-currency" required value="₹" placeholder="₹, $, €">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Owner User Configurations -->
+        <div>
+          <h3 style="font-size: 14px; font-weight: 700; color: var(--primary-hover); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 12px;">2. Owner Account Details</h3>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div>
+              <label for="setup-admin-name">Full Name</label>
+              <input type="text" id="setup-admin-name" required placeholder="e.g. Administrator">
+            </div>
+            <div>
+              <label for="setup-email">Email Address</label>
+              <input type="email" id="setup-email" required placeholder="owner@restaurant.com">
+            </div>
+            <div style="display: grid; grid-template-cols: 1fr 1fr; gap: 12px;">
+              <div>
+                <label for="setup-password">Password</label>
+                <input type="password" id="setup-password" required placeholder="Minimum 6 characters">
+              </div>
+              <div>
+                <label for="setup-confirm-password">Confirm Password</label>
+                <input type="password" id="setup-confirm-password" required placeholder="Re-type password">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 12px;">Initialize & Open Terminal</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ES MODULE INJECTOR ENGINE -->
+  <script type="module">
+    import { isConfigured, auth, db, createUserWithEmailAndPassword, doc, setDoc } from './js/firebase-config.js';
+    import { saveRestaurantSettings } from './js/db.js';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+
+      if (!isConfigured) {
+        alert("Firebase credentials are not set in config.js! Please update config.js first.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      const form = document.getElementById('setup-form');
+      const errorDiv = document.getElementById('setup-error');
+      const successDiv = document.getElementById('setup-success');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorDiv.classList.add('hidden');
+        successDiv.classList.add('hidden');
+
+        // Extract values
+        const name = document.getElementById('setup-name').value.trim();
+        const desc = document.getElementById('setup-desc').value.trim();
+        const logo = document.getElementById('setup-logo').value.trim();
+        const currency = document.getElementById('setup-currency').value.trim();
+        
+        const adminName = document.getElementById('setup-admin-name').value.trim();
+        const email = document.getElementById('setup-email').value.trim();
+        const password = document.getElementById('setup-password').value;
+        const confirmPassword = document.getElementById('setup-confirm-password').value;
+
+        // Validations
+        if (password.length < 6) {
+          errorDiv.innerText = "Password must be at least 6 characters long.";
+          errorDiv.classList.remove('hidden');
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          errorDiv.innerText = "Passwords do not match.";
+          errorDiv.classList.remove('hidden');
+          return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Setting up restaurant...";
+
+        try {
+          // 1. Create owner admin user credentials in Firebase Auth
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const uid = userCredential.user.uid;
+
+          // 2. Initialize owner admin document in users collection
+          await setDoc(doc(db, 'users', uid), {
+            name: adminName,
+            email: email.toLowerCase(),
+            role: 'owner',
+            created_at: new Date()
+          });
+
+          // 3. Save restaurant branding settings document in settings collection
+          await saveRestaurantSettings({
+            name: name,
+            slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+            description: desc,
+            logoUrl: logo,
+            currency: currency
+          });
+
+          successDiv.innerText = "Restaurant initialized successfully! Loading POS terminal...";
+          successDiv.classList.remove('hidden');
+
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1500);
+
+        } catch (err) {
+          console.error("Initialization failed:", err);
+          errorDiv.innerText = err.message || "Failed to initialize restaurant setup.";
+          errorDiv.classList.remove('hidden');
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Initialize & Open Terminal";
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,166 @@
+/* POS billing split dashboard layout */
+.order-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  min-height: calc(100vh - 120px);
+}
+
+.items-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.billing-section {
+  width: 420px;
+  position: sticky;
+  top: 100px;
+  height: calc(100vh - 140px);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+/* Category horizontal tabs */
+.categories-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.categories-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.categories-scroll::-webkit-scrollbar-thumb {
+  background: var(--text-dark);
+  border-radius: 10px;
+}
+
+.category-tab {
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: hsla(217, 30%, 18%, 0.3);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.category-tab:hover {
+  color: var(--text-main);
+  border-color: var(--border-hover);
+}
+.category-tab.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+/* Items grids and cards */
+.pos-items-grid {
+  display: grid;
+  grid-template-cols: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.pos-dish-card {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 150px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.pos-dish-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+}
+
+/* Active cart list */
+.billing-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.cart-items-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cart-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: hsla(217, 30%, 18%, 0.25);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.cart-item-qty-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.cart-item-qty-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0 4px;
+}
+.cart-item-qty-btn:hover {
+  color: var(--text-main);
+}
+
+/* Calculation summary panel */
+.billing-summary {
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.summary-row.total {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 10px;
+  margin-top: 6px;
+}
+
+.billing-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}

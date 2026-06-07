@@ -1,0 +1,122 @@
+/* Customer mobile ordering styling */
+
+/* Category filter tab pills */
+.category-tab {
+  padding: 6px 16px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: hsla(217, 30%, 18%, 0.3);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  font-family: var(--font-sans);
+}
+.category-tab:hover {
+  color: var(--text-main);
+  border-color: var(--border-hover);
+}
+.category-tab.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+/* Categories horizontal scroll row */
+.categories-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.categories-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Menu item card component */
+.menu-item-card {
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+.menu-item-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+}
+
+/* Floating fixed cart bar */
+.fixed-cart-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 16px;
+  right: 16px;
+  z-index: 400;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Sliding cart drawer (bottom-sheet on mobile) */
+.cart-drawer {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 24px 24px 0 0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cart-drawer.active {
+  transform: translateY(0);
+}
+
+/* Chef instruction note card */
+.instruction-note-card {
+  background: hsla(262, 83%, 18%, 0.15);
+  border: 1px solid hsla(262, 83%, 38%, 0.2);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--primary-hover);
+  font-style: italic;
+}
+
+/* Tracker progress step node */
+.step-node-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-color);
+  background: var(--bg-main);
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+}
+.step-node-icon.active {
+  background: var(--primary);
+  border-color: var(--primary-hover);
+  color: #fff;
+  box-shadow: 0 4px 14px var(--primary-glow);
+}
+.step-node-icon.passed {
+  background: var(--primary);
+  border-color: var(--primary-hover);
+  color: #fff;
+}
+
+/* Responsive full mobile viewport layout */
+@media (max-width: 600px) {
+  .fixed-cart-bar {
+    left: 12px;
+    right: 12px;
+    bottom: 16px;
+  }
+}

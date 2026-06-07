@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RestaurantOS — POS billing checkout</title>
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/order.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Navigation Dynamic Header Target -->
+    <header class="main-header"></header>
+
+    <!-- Main Workspace Content -->
+    <main class="main-content">
+      <div class="order-layout">
+        
+        <!-- Left Side: Catalog Catalog Grid & Search -->
+        <section class="items-section">
+          <div style="display: flex; gap: 16px; align-items: center; justify-content: space-between;">
+            <div style="flex: 1; position: relative;">
+              <input type="text" id="search-dishes" placeholder="Search dish names or description tags..." style="padding-left: 40px; width: 100%;">
+              <i data-lucide="search" style="position: absolute; left: 14px; top: 12px; width: 16px; height: 16px; color: var(--text-muted);"></i>
+            </div>
+          </div>
+
+          <!-- Mapped Category horizontal filter -->
+          <div id="categories-tabs" class="categories-scroll">
+            <!-- Dynamically populated category buttons -->
+          </div>
+
+          <!-- POS dishes grid -->
+          <div id="catalog-grid" class="pos-items-grid">
+            <!-- Dynamically populated dish cards -->
+          </div>
+        </section>
+
+        <!-- Right Side: POS Table Checkout Cart -->
+        <section class="glass-panel billing-section">
+          <div class="billing-header">
+            <label for="tables-select" style="margin-bottom: 8px; display: block;">Active Seating Context</label>
+            <div style="position: relative;">
+              <select id="tables-select" style="padding-right: 36px; width: 100%;">
+                <option value="">-- Choose Seating Table --</option>
+                <!-- Dynamically populated tables -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Checkout active cart rows list -->
+          <div id="cart-items-wrapper" class="cart-items-wrapper">
+            <!-- Dynamic order rows -->
+            <p class="text-xs text-slate-500 py-12 text-center" style="color: var(--text-muted); text-align: center; margin: auto 0;">Cart is empty. Select items to add.</p>
+          </div>
+
+          <!-- Billing aggregates calculations summary -->
+          <div class="billing-summary">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span id="checkout-subtotal">₹0.00</span>
+            </div>
+            <div class="summary-row">
+              <span>GST Tax (5%)</span>
+              <span id="checkout-tax">₹0.00</span>
+            </div>
+            <div class="summary-row" style="align-items: center;">
+              <span>Discounts Deduct</span>
+              <div style="width: 100px; display: flex; align-items: center;">
+                <input type="number" id="cart-discount" placeholder="0" min="0" step="1" style="padding: 4px 8px; font-size: 12px; height: 28px; text-align: right;">
+              </div>
+            </div>
+            <div class="summary-row total">
+              <span>Grand Total</span>
+              <span id="checkout-grand-total">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Actions triggers -->
+          <div class="billing-actions">
+            <button id="btn-send-kds" class="btn btn-secondary" style="flex: 1;">
+              <i data-lucide="chef-hat" style="width: 16px; height: 16px;"></i>
+              <span>Push KDS</span>
+            </button>
+            <button id="btn-pay-print" class="btn btn-primary" style="flex: 1.2;">
+              <i data-lucide="printer" style="width: 16px; height: 16px;"></i>
+              <span>Settle & Print</span>
+            </button>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/order.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+/* Table mapping configurations grid */
+.table-grid {
+  display: grid;
+  grid-template-cols: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.table-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 180px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.table-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px 0 rgba(0, 0, 0, 0.5);
+  border-color: var(--border-hover);
+}
+
+.table-card.free {
+  border-left: 4px solid var(--success);
+}
+
+.table-card.occupied {
+  border-left: 4px solid var(--danger);
+}
+
+.table-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-card-number {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.table-card-body {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 16px 0;
+}
+
+.table-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  margin-top: auto;
+}
+
+.qr-viewer-wrapper {
+  background: white;
+  padding: 16px;
+  border-radius: 16px;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 24px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.qr-viewer-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
