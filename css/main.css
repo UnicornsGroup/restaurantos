@@ -259,3 +259,48 @@ h1, h2, h3, h4, h5 {
   color: var(--text-main) !important;
 }
 
+/* Specific text color overrides for Light Theme readability */
+.light-theme .kpi-value,
+.light-theme .table-card-number,
+.light-theme #drawer-subtotal,
+.light-theme .summary-row.total,
+.light-theme .kds-item-row span,
+.light-theme td {
+  color: var(--text-main) !important;
+}
+
+/* General overrides for text elements inside cards and modals in Light Theme */
+.light-theme .glass-panel span:not(.text-muted):not(.btn):not(.badge) {
+  color: var(--text-main) !important;
+}
+
+/* POS checkout billing list text overrides */
+.light-theme .cart-item-row h5,
+.light-theme .cart-item-row span,
+.light-theme .cart-item-row div {
+  color: var(--text-main) !important;
+}
+
+/* KDS active ticket text overrides */
+.light-theme .kds-ticket span,
+.light-theme .kds-ticket div {
+  color: var(--text-main) !important;
+}
+
+/* Customer menu active selections list overrides */
+.light-theme #cart-items-container h4,
+.light-theme #cart-items-container span {
+  color: var(--text-main) !important;
+}
+
+/* Order tracker dishes list overrides */
+.light-theme #tracker-items-list h5 {
+  color: var(--text-main) !important;
+}
+
+/* Staff management profiles grid overrides */
+.light-theme #staff-grid h4,
+.light-theme #staff-grid span {
+  color: var(--text-main) !important;
+}
+
