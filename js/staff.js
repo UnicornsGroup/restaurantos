@@ -1,9 +1,9 @@
 import { initAuthGuard } from './auth.js';
 import { db, collection, getDocs, doc, setDoc, deleteDoc, updateDoc } from './firebase-config.js';
-import { toggleModal, showAlert } from './utils.js';
+import { toggleModal } from './utils.js';
 import { subscribeTables } from './realtime.js';
 import { firebaseConfig } from './config.js';
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 let activeUser = null;
@@ -92,7 +92,12 @@ const loadStaff = async () => {
     renderStaffGrid();
   } catch (err) {
     console.error("Failed to load staff list:", err);
-    showAlert('staff-alert-error', 'Failed to load staff accounts. Verify database read permissions.');
+    const alertError = document.getElementById('staff-alert-error');
+    if (alertError) {
+      document.getElementById('staff-error-text').innerText = 'Failed to load staff accounts. Verify database read permissions.';
+      alertError.classList.remove('hidden');
+      setTimeout(() => alertError.classList.add('hidden'), 4000);
+    }
   }
 };
 
@@ -305,7 +310,12 @@ const handleStaffFormSubmit = async (e) => {
     } else {
       // Creating new staff member in Firebase Auth & Firestore
       // Use secondary app to prevent local session sign out
-      const secondaryApp = initializeApp(firebaseConfig, "SecondaryRegistration");
+      let secondaryApp;
+      if (getApps().some(app => app.name === "SecondaryRegistration")) {
+        secondaryApp = getApp("SecondaryRegistration");
+      } else {
+        secondaryApp = initializeApp(firebaseConfig, "SecondaryRegistration");
+      }
       const secondaryAuth = getAuth(secondaryApp);
 
       const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
@@ -334,9 +344,19 @@ const handleStaffFormSubmit = async (e) => {
   } catch (err) {
     console.error("Staff save failed:", err);
     if (alertError) {
-      document.getElementById('staff-error-text').innerText = 'Error: ' + (err.message || 'Failed to save staff configurations.');
+      let friendlyMsg = err.message || 'Failed to save staff configurations.';
+      if (err.code === 'auth/email-already-in-use') {
+        friendlyMsg = 'This email is already registered to another staff member or owner.';
+      } else if (err.code === 'auth/weak-password') {
+        friendlyMsg = 'The password must be at least 6 characters long.';
+      } else if (err.code === 'auth/invalid-email') {
+        friendlyMsg = 'The email address is invalid.';
+      } else if (err.message && err.message.toLowerCase().includes('permission')) {
+        friendlyMsg = 'Database permission denied. Make sure firestore.rules are copied to your Firebase Console.';
+      }
+      document.getElementById('staff-error-text').innerText = 'Error: ' + friendlyMsg;
       alertError.classList.remove('hidden');
-      setTimeout(() => alertError.classList.add('hidden'), 4000);
+      setTimeout(() => alertError.classList.add('hidden'), 5000);
     }
   } finally {
     submitBtn.disabled = false;
@@ -368,9 +388,13 @@ const handleDeleteStaff = async (userId) => {
   } catch (err) {
     console.error("Staff deletion failed:", err);
     if (alertError) {
-      document.getElementById('staff-error-text').innerText = 'Deletion failed: ' + (err.message || 'Check firestore rule permissions.');
+      let friendlyMsg = err.message || 'Check firestore rule permissions.';
+      if (err.message && err.message.toLowerCase().includes('permission')) {
+        friendlyMsg = 'Database permission denied. Make sure firestore.rules are copied to your Firebase Console.';
+      }
+      document.getElementById('staff-error-text').innerText = 'Deletion failed: ' + friendlyMsg;
       alertError.classList.remove('hidden');
-      setTimeout(() => alertError.classList.add('hidden'), 4000);
+      setTimeout(() => alertError.classList.add('hidden'), 5000);
     }
   }
 };
