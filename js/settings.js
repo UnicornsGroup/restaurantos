@@ -5,6 +5,7 @@ import { showAlert } from './utils.js';
 
 let activeUser = null;
 let activeRestaurant = null;
+let currentLogoBase64 = "";
 
 const initSettingsPage = async () => {
   // Load existing settings and populate the form
@@ -12,7 +13,6 @@ const initSettingsPage = async () => {
     const settings = await getRestaurantSettings();
     if (settings) {
       const nameEl = document.getElementById('set-rest-name');
-      const logoEl = document.getElementById('set-rest-logo');
       const descEl = document.getElementById('set-rest-desc');
       const currencyEl = document.getElementById('set-rest-currency');
       const slugEl = document.getElementById('set-rest-slug');
@@ -20,7 +20,6 @@ const initSettingsPage = async () => {
       const stateEl = document.getElementById('set-rest-state');
 
       if (nameEl) nameEl.value = settings.name || '';
-      if (logoEl) logoEl.value = settings.logoUrl || '';
       if (descEl) descEl.value = settings.description || '';
       if (currencyEl) currencyEl.value = settings.currency || '₹';
       if (slugEl) slugEl.value = settings.slug || '';
@@ -29,18 +28,52 @@ const initSettingsPage = async () => {
 
       // Show live logo preview if URL exists
       if (settings.logoUrl) {
+        currentLogoBase64 = settings.logoUrl;
         renderLogoPreview(settings.logoUrl);
+        const filenameLabel = document.getElementById('set-rest-logo-filename');
+        if (filenameLabel) {
+          filenameLabel.innerText = settings.logoUrl.startsWith('data:') ? 'Stored Image (Base64)' : 'Stored Image (URL)';
+        }
       }
     }
   } catch (err) {
     console.error("Could not load settings:", err);
   }
 
-  // Logo URL live preview
-  const logoInput = document.getElementById('set-rest-logo');
-  if (logoInput) {
-    logoInput.addEventListener('input', () => {
-      renderLogoPreview(logoInput.value);
+  // Logo file upload change listener
+  const logoFileInput = document.getElementById('set-rest-logo-file');
+  const filenameLabel = document.getElementById('set-rest-logo-filename');
+  
+  if (logoFileInput) {
+    logoFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.size > 256000) { // Limit to 250KB
+        alert("Image is too large! Please choose an image smaller than 250KB to ensure fast loading times.");
+        logoFileInput.value = '';
+        return;
+      }
+
+      if (filenameLabel) filenameLabel.innerText = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        currentLogoBase64 = event.target.result;
+        renderLogoPreview(currentLogoBase64);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Remove logo button listener
+  const removeLogoBtn = document.getElementById('remove-logo-btn');
+  if (removeLogoBtn) {
+    removeLogoBtn.addEventListener('click', () => {
+      currentLogoBase64 = "";
+      renderLogoPreview("");
+      if (logoFileInput) logoFileInput.value = '';
+      if (filenameLabel) filenameLabel.innerText = 'No file uploaded';
     });
   }
 
@@ -56,7 +89,7 @@ const initSettingsPage = async () => {
       if (alertError) alertError.classList.add('hidden');
 
       const name = document.getElementById('set-rest-name').value.trim();
-      const logoUrl = document.getElementById('set-rest-logo').value.trim();
+      const logoUrl = currentLogoBase64;
       const description = document.getElementById('set-rest-desc').value.trim();
       const currency = document.getElementById('set-rest-currency').value.trim();
       const gstin = document.getElementById('set-rest-gstin').value.trim().toUpperCase();
