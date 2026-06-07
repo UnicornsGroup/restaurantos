@@ -116,11 +116,31 @@ const initPage = async () => {
     return;
   }
 
+  let isTableFree = false;
+  if (tableId) {
+    try {
+      const tableDoc = await getDoc(doc(db, 'tables', tableId));
+      if (tableDoc.exists()) {
+        tableNumber = tableDoc.data().table_number;
+        const status = tableDoc.data().status || 'free';
+        if (status === 'free') {
+          isTableFree = true;
+          // Reset guest details state for the new session
+          guestName = '';
+          guestMobile = '';
+        }
+      }
+    } catch (err) {
+      console.error('Failed to resolve table status during init:', err);
+    }
+  }
+
   // ── Guest check ────────────────────────────────────────────────────────────
   const storedMobile = localStorage.getItem('ros_guest_mobile');
   const storedName   = localStorage.getItem('ros_guest_name');
 
-  if (storedMobile && storedName) {
+  // Only auto-bypass registration if the table is already occupied (same session)
+  if (!isTableFree && storedMobile && storedName) {
     // Returning guest — verify in Firestore
     let guest = await getGuest(storedMobile);
     if (!guest) {
@@ -141,7 +161,11 @@ const initPage = async () => {
     }
   }
 
-  // New guest — show registration screen
+  // Pre-fill inputs for returning guests for their convenience
+  if (storedMobile && grMobile) grMobile.value = storedMobile;
+  if (storedName && grName) grName.value = storedName;
+
+  // New guest or new table session — show registration screen
   menuLoading.style.display = 'none';
   guestRegisterScreen.classList.remove('hidden');
 
