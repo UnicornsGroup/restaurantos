@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    (function() {
+      if (localStorage.getItem('ros_theme') === 'light') {
+        document.documentElement.classList.add('light-theme');
+      }
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Digital QR Menu & Tracker</title>
@@ -117,6 +124,11 @@
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <div id="google_translate_element" style="display: none !important;"></div>
+          <!-- Theme Toggle Button -->
+          <button id="theme-toggle-btn" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: hsla(222, 47%, 2%, 0.8); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 8px; transition: all 0.2s ease; padding: 0; outline: none;" title="Toggle Light/Dark Theme">
+            <i data-lucide="sun" id="theme-sun-icon" style="width: 14px; height: 14px; display: none;"></i>
+            <i data-lucide="moon" id="theme-moon-icon" style="width: 14px; height: 14px;"></i>
+          </button>
           <select id="lang-selector" style="background: hsla(222, 47%, 2%, 0.8); border: 1px solid var(--border-color); color: #fff; font-size: 11px; padding: 4px 8px; border-radius: 8px; width: auto; font-weight: 700; cursor: pointer; font-family: var(--font-sans); outline: none; transition: border-color 0.2s;">
             <option value="en">English</option>
             <option value="gu">ગુજરાતી</option>

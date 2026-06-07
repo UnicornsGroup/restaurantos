@@ -76,6 +76,12 @@ export const injectHeader = (activeTabId, currentUser, currentRestaurant) => {
 
     <!-- Right section user and log out -->
     <div style="display: flex; align-items: center; gap: 16px;">
+      <!-- Theme Toggle Button -->
+      <button id="theme-toggle-btn" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: hsla(222, 47%, 12%, 0.6); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 10px; transition: all 0.2s ease; padding: 0;" title="Toggle Light/Dark Theme">
+        <i data-lucide="sun" id="theme-sun-icon" style="width: 16px; height: 16px; display: none;"></i>
+        <i data-lucide="moon" id="theme-moon-icon" style="width: 16px; height: 16px;"></i>
+      </button>
+
       <div style="display: flex; flex-direction: column; align-items: flex-end;">
         <span style="font-size: 13px; font-weight: 600; color: #e2e8f0;">${userName}</span>
         <span style="font-size: 10px; text-transform: uppercase; font-weight: 600; color: var(--primary-hover); letter-spacing: 0.05em;">${userRole}</span>
@@ -91,6 +97,37 @@ export const injectHeader = (activeTabId, currentUser, currentRestaurant) => {
   // Initialize Lucide icons inside injected header
   if (window.lucide) {
     window.lucide.createIcons();
+  }
+
+  // Theme Toggle logic
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
+  if (themeToggleBtn) {
+    const sunIcon = document.getElementById('theme-sun-icon');
+    const moonIcon = document.getElementById('theme-moon-icon');
+    
+    const currentTheme = localStorage.getItem('ros_theme') || 'dark';
+    if (currentTheme === 'light') {
+      if (sunIcon) sunIcon.style.display = 'none';
+      if (moonIcon) moonIcon.style.display = 'block';
+    } else {
+      if (sunIcon) sunIcon.style.display = 'block';
+      if (moonIcon) moonIcon.style.display = 'none';
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      const isLight = document.documentElement.classList.contains('light-theme');
+      if (isLight) {
+        document.documentElement.classList.remove('light-theme');
+        localStorage.setItem('ros_theme', 'dark');
+        if (sunIcon) sunIcon.style.display = 'block';
+        if (moonIcon) moonIcon.style.display = 'none';
+      } else {
+        document.documentElement.classList.add('light-theme');
+        localStorage.setItem('ros_theme', 'light');
+        if (sunIcon) sunIcon.style.display = 'none';
+        if (moonIcon) moonIcon.style.display = 'block';
+      }
+    });
   }
 
   // Attach logout action trigger

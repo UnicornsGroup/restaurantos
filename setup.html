@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    (function() {
+      if (localStorage.getItem('ros_theme') === 'light') {
+        document.documentElement.classList.add('light-theme');
+      }
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RestaurantOS Onboarding Wizard</title>
@@ -13,6 +20,12 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+
+  <!-- Floating Theme Toggle Button -->
+  <button id="theme-toggle-btn" style="position: absolute; top: 20px; right: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: hsla(222, 47%, 12%, 0.6); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 10px; transition: all 0.2s ease; z-index: 10000;" title="Toggle Light/Dark Theme">
+    <i data-lucide="sun" id="theme-sun-icon" style="width: 16px; height: 16px; display: none;"></i>
+    <i data-lucide="moon" id="theme-moon-icon" style="width: 16px; height: 16px;"></i>
+  </button>
 
   <div class="auth-container">
     <div id="setup-card" class="glass-panel animate-slide-up" style="width: 100%; max-width: 600px; padding: 36px;">
@@ -91,6 +104,37 @@
     window.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) {
         lucide.createIcons();
+      }
+
+      // Theme Toggle logic
+      const themeToggleBtn = document.getElementById('theme-toggle-btn');
+      if (themeToggleBtn) {
+        const sunIcon = document.getElementById('theme-sun-icon');
+        const moonIcon = document.getElementById('theme-moon-icon');
+        
+        const currentTheme = localStorage.getItem('ros_theme') || 'dark';
+        if (currentTheme === 'light') {
+          if (sunIcon) sunIcon.style.display = 'none';
+          if (moonIcon) moonIcon.style.display = 'block';
+        } else {
+          if (sunIcon) sunIcon.style.display = 'block';
+          if (moonIcon) moonIcon.style.display = 'none';
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+          const isLight = document.documentElement.classList.contains('light-theme');
+          if (isLight) {
+            document.documentElement.classList.remove('light-theme');
+            localStorage.setItem('ros_theme', 'dark');
+            if (sunIcon) sunIcon.style.display = 'block';
+            if (moonIcon) moonIcon.style.display = 'none';
+          } else {
+            document.documentElement.classList.add('light-theme');
+            localStorage.setItem('ros_theme', 'light');
+            if (sunIcon) sunIcon.style.display = 'none';
+            if (moonIcon) moonIcon.style.display = 'block';
+          }
+        });
       }
 
       if (!isConfigured) {

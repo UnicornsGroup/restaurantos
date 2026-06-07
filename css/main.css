@@ -128,3 +128,134 @@ h1, h2, h3, h4, h5 {
   justify-content: center;
 }
 
+/* ─── Light Theme System ────────────────────────────────────────────────── */
+.light-theme {
+  --bg-main: hsl(210, 20%, 96%);
+  --bg-card: hsla(0, 0%, 100%, 0.85);
+  --border-color: hsla(215, 20%, 82%, 0.8);
+  --border-hover: hsla(215, 20%, 72%, 0.9);
+  
+  --primary: hsl(262, 83%, 50%);
+  --primary-hover: hsl(262, 83%, 40%);
+  --primary-glow: hsla(262, 83%, 50%, 0.15);
+
+  --secondary: hsl(190, 90%, 38%);
+  --success: hsl(142, 70%, 35%);
+  --success-glow: hsla(142, 70%, 35%, 0.1);
+  --danger: hsl(346, 80%, 45%);
+  --danger-glow: hsla(346, 80%, 45%, 0.1);
+
+  --text-main: hsl(222, 47%, 12%);
+  --text-muted: hsl(215, 16%, 40%);
+  --text-dark: hsl(215, 16%, 80%);
+}
+
+.light-theme input, 
+.light-theme select, 
+.light-theme textarea {
+  background-color: hsl(0, 0%, 100%);
+  border-color: hsla(215, 20%, 82%, 0.8);
+  color: hsl(222, 47%, 12%);
+}
+
+.light-theme header.main-header {
+  background: hsla(210, 20%, 96%, 0.85);
+}
+
+.light-theme .header-nav .tab-btn:hover {
+  color: var(--text-main);
+  background: hsla(215, 20%, 82%, 0.4);
+}
+
+.light-theme #menu-container header {
+  background: hsla(210, 20%, 96%, 0.95) !important;
+}
+
+.light-theme .cart-drawer {
+  background: hsl(0, 0%, 100%) !important;
+}
+
+.light-theme #waiter-tables-container div {
+  background: hsl(210, 20%, 90%) !important;
+}
+
+.light-theme .modal-backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.light-theme #tables-checkbox-grid {
+  background: hsl(210, 20%, 90%) !important;
+}
+.light-theme #tables-checkbox-grid span {
+  color: var(--text-main) !important;
+}
+
+.light-theme .table-assign-checkbox + span {
+  color: var(--text-main) !important;
+}
+
+.light-theme .table-card-body span, 
+.light-theme .table-card-body div {
+  color: var(--text-main) !important;
+}
+
+.light-theme .table-card.free {
+  background: hsla(142, 70%, 45%, 0.1) !important;
+  border-color: hsla(142, 70%, 45%, 0.3) !important;
+}
+
+.light-theme .table-card.occupied {
+  background: hsla(346, 80%, 55%, 0.1) !important;
+  border-color: hsla(346, 80%, 55%, 0.3) !important;
+}
+
+.light-theme .table-card-number {
+  color: var(--text-main) !important;
+}
+
+.light-theme h1,
+.light-theme h2,
+.light-theme h3,
+.light-theme h4,
+.light-theme h5 {
+  color: var(--text-main) !important;
+}
+
+.light-theme .btn-secondary {
+  background: hsla(215, 20%, 82%, 0.5);
+  color: var(--text-main);
+}
+.light-theme .btn-secondary:hover {
+  background: hsla(215, 20%, 72%, 0.7);
+}
+
+.light-theme .goog-te-gadget-simple {
+  background-color: hsl(0, 0%, 100%) !important;
+  color: var(--text-main) !important;
+}
+.light-theme .goog-te-gadget-simple .goog-te-menu-value {
+  color: var(--text-main) !important;
+}
+.light-theme .goog-te-gadget-simple .goog-te-menu-value span {
+  color: var(--text-main) !important;
+}
+
+.light-theme #lang-selector {
+  background: hsl(0, 0%, 100%) !important;
+  color: var(--text-main) !important;
+}
+
+.light-theme .category-tab {
+  background: hsla(215, 20%, 82%, 0.4);
+}
+.light-theme .category-tab:hover {
+  color: var(--text-main);
+}
+.light-theme .category-tab.active {
+  color: #fff !important;
+}
+
+.light-theme #google_translate_element {
+  color: var(--text-main) !important;
+}
+

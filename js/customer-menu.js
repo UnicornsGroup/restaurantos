@@ -689,6 +689,37 @@ const handlePlaceOrder = async () => {
 };
 
 const setupMenuListeners = () => {
+  // Theme Toggle logic
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
+  if (themeToggleBtn) {
+    const sunIcon = document.getElementById('theme-sun-icon');
+    const moonIcon = document.getElementById('theme-moon-icon');
+    
+    const currentTheme = localStorage.getItem('ros_theme') || 'dark';
+    if (currentTheme === 'light') {
+      if (sunIcon) sunIcon.style.display = 'none';
+      if (moonIcon) moonIcon.style.display = 'block';
+    } else {
+      if (sunIcon) sunIcon.style.display = 'block';
+      if (moonIcon) moonIcon.style.display = 'none';
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      const isLight = document.documentElement.classList.contains('light-theme');
+      if (isLight) {
+        document.documentElement.classList.remove('light-theme');
+        localStorage.setItem('ros_theme', 'dark');
+        if (sunIcon) sunIcon.style.display = 'block';
+        if (moonIcon) moonIcon.style.display = 'none';
+      } else {
+        document.documentElement.classList.add('light-theme');
+        localStorage.setItem('ros_theme', 'light');
+        if (sunIcon) sunIcon.style.display = 'none';
+        if (moonIcon) moonIcon.style.display = 'block';
+      }
+    });
+  }
+
   if (menuSearchInput) {
     menuSearchInput.addEventListener('input', (e) => {
       searchQuery = e.target.value;
