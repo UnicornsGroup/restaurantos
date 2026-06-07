@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function() {
+      if (localStorage.getItem('ros_theme') === 'light') {
+        document.documentElement.classList.add('light-theme');
+      }
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RestaurantOS — Staff Sign In</title>
+  <meta name="description" content="Restaurant POS terminal login — sign in with your staff credentials to access the RestaurantOS portal.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Floating Theme Toggle Button -->
+  <button id="theme-toggle-btn" style="position: absolute; top: 20px; right: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: hsla(222, 47%, 12%, 0.6); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 10px; transition: all 0.2s ease; z-index: 10000;" title="Toggle Light/Dark Theme">
+    <i data-lucide="sun" id="theme-sun-icon" style="width: 16px; height: 16px; display: none;"></i>
+    <i data-lucide="moon" id="theme-moon-icon" style="width: 16px; height: 16px;"></i>
+  </button>
+
+  <!-- 1. FIREBASE NOT CONFIGURED OVERLAY -->
+  <div id="credential-overlay" class="credential-overlay hidden" style="display:none;">
+    <div class="glass-panel animate-slide-up" style="padding: 32px; max-width: 520px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center;">
+      <div style="width: 64px; height: 64px; border-radius: 16px; background: hsla(262, 83%, 18%, 0.4); border: 1px solid hsla(262, 83%, 58%, 0.3); display: flex; align-items: center; justify-content: center; color: hsl(262, 83%, 68%);">
+        <i data-lucide="shield-alert" style="width: 32px; height: 32px;"></i>
+      </div>
+      <div>
+        <h2 style="font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px;">Firebase Setup Required</h2>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.65;">
+          To use RestaurantOS you need to connect it to your own Firebase project. Follow the steps below:
+        </p>
+      </div>
+      
+      <div style="width: 100%; text-align: left; background: hsla(222, 47%, 2%, 0.8); border: 1px solid var(--border-color); padding: 16px 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 12px; color: var(--text-main);">
+        <p><strong>Step 1:</strong> Go to the <a href="https://console.firebase.google.com/" target="_blank" style="color: var(--primary-hover); text-decoration: underline;">Firebase Console</a> and create a new project.</p>
+        <p><strong>Step 2:</strong> Enable <strong>Firestore Database</strong> and <strong>Authentication</strong> (Email/Password sign-in provider).</p>
+        <p><strong>Step 3:</strong> Register a Web app and copy the <code>firebaseConfig</code> object.</p>
+        <p><strong>Step 4:</strong> Open <code style="background: hsla(222, 47%, 4%, 0.8); padding: 2px 5px; border-radius: 4px; color: var(--primary-hover); font-family: monospace;">js/config.js</code> and paste your project keys inside <code>firebaseConfig</code>.</p>
+      </div>
+
+      <div style="display: flex; gap: 12px; width: 100%;">
+        <a href="setup.html" class="btn btn-secondary" style="flex: 1; text-align: center;">
+          <i data-lucide="settings-2" style="width: 16px; height: 16px;"></i>
+          <span>First-Time Setup</span>
+        </a>
+        <button onclick="window.location.reload()" class="btn btn-primary" style="flex: 1;">
+          <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+          <span>Reload App</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MAIN LOGIN CARD -->
+  <div class="auth-container">
+    <div id="login-card" class="glass-panel auth-card animate-slide-up">
+      
+      <!-- Restaurant Branding -->
+      <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 28px; text-align: center;">
+        <img id="login-restaurant-logo" style="width: 64px; height: 64px; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 14px rgba(0,0,0,0.35); border: 1px solid hsla(262, 83%, 58%, 0.25); margin-bottom: 12px; display: none;" alt="Restaurant Logo">
+        <div id="login-sparkles-fallback" style="width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, var(--primary), hsl(262, 83%, 38%)); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px var(--primary-glow); margin-bottom: 12px;">
+          <i data-lucide="sparkles" style="width: 22px; height: 22px; color: #fff;"></i>
+        </div>
+        <h1 id="login-restaurant-name" style="font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.02em;">RestaurantOS</h1>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Sign in to access your POS portal</p>
+      </div>
+      
+      <!-- Error Alert -->
+      <div id="login-error" class="hidden" style="color: var(--danger); font-size: 12px; background: var(--danger-glow); border: 1px solid hsla(346, 80%, 55%, 0.3); padding: 12px 14px; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="alert-circle" style="width: 14px; height: 14px; flex-shrink: 0;"></i>
+        <span id="login-error-text"></span>
+      </div>
+      
+      <!-- Login Form -->
+      <form id="login-form-el" style="display: flex; flex-direction: column; gap: 16px;">
+        <div>
+          <label for="login-email">Email Address</label>
+          <input type="email" id="login-email" required placeholder="owner@restaurant.com" autocomplete="email">
+        </div>
+        <div>
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button type="submit" id="login-submit-btn" class="btn btn-primary" style="width: 100%; margin-top: 6px; padding: 12px 24px; font-size: 15px;">
+          <i data-lucide="log-in" style="width: 16px; height: 16px;"></i>
+          <span>Sign In to Terminal</span>
+        </button>
+      </form>
+      
+      <!-- Setup Link -->
+      <p style="text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px;">
+        New installation? <a href="setup.html" style="color: var(--primary-hover); font-weight: 600; text-decoration: none;">Run Setup Wizard</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ES MODULE SCRIPTS -->
+  <script type="module">
+    import { isConfigured } from './js/firebase-config.js';
+    import { initAuthGuard, handleLogin } from './js/auth.js';
+    import { restaurantConfig } from './js/config.js';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Initialize Lucide icons
+      if (window.lucide) lucide.createIcons();
+
+      // Theme Toggle logic
+      const themeToggleBtn = document.getElementById('theme-toggle-btn');
+      if (themeToggleBtn) {
+        const sunIcon = document.getElementById('theme-sun-icon');
+        const moonIcon = document.getElementById('theme-moon-icon');
+        
+        const currentTheme = localStorage.getItem('ros_theme') || 'dark';
+        if (currentTheme === 'light') {
+          if (sunIcon) sunIcon.style.display = 'none';
+          if (moonIcon) moonIcon.style.display = 'block';
+        } else {
+          if (sunIcon) sunIcon.style.display = 'block';
+          if (moonIcon) moonIcon.style.display = 'none';
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+          const isLight = document.documentElement.classList.contains('light-theme');
+          if (isLight) {
+            document.documentElement.classList.remove('light-theme');
+            localStorage.setItem('ros_theme', 'dark');
+            if (sunIcon) sunIcon.style.display = 'block';
+            if (moonIcon) moonIcon.style.display = 'none';
+          } else {
+            document.documentElement.classList.add('light-theme');
+            localStorage.setItem('ros_theme', 'light');
+            if (sunIcon) sunIcon.style.display = 'none';
+            if (moonIcon) moonIcon.style.display = 'block';
+          }
+        });
+      }
+
+      if (!isConfigured) {
+        // Show setup instructions overlay
+        const overlay = document.getElementById('credential-overlay');
+        overlay.style.display = 'flex';
+        overlay.classList.remove('hidden');
+        document.querySelector('.auth-container').style.display = 'none';
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      // Render restaurant branding from config.js
+      const loginLogo = document.getElementById('login-restaurant-logo');
+      const loginName = document.getElementById('login-restaurant-name');
+      const sparklesFallback = document.getElementById('login-sparkles-fallback');
+
+      if (restaurantConfig.logoUrl) {
+        loginLogo.src = restaurantConfig.logoUrl;
+        loginLogo.style.display = 'block';
+        sparklesFallback.style.display = 'none';
+      }
+      loginName.innerText = restaurantConfig.name || 'RestaurantOS';
+
+      // Auth guard — redirect to dashboard if already logged in
+      initAuthGuard('login', (user, restaurant) => {
+        if (user) {
+          window.location.href = 'dashboard.html';
+        }
+        // If null user, we stay on this page and show the login form
+      });
+
+      // Handle login form submission
+      const loginFormEl = document.getElementById('login-form-el');
+      const errorDiv = document.getElementById('login-error');
+      const errorText = document.getElementById('login-error-text');
+      const submitBtn = document.getElementById('login-submit-btn');
+
+      loginFormEl.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        errorDiv.classList.add('hidden');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<div style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; animation: spin 0.8s linear infinite;"></div><span>Signing in...</span>`;
+
+        try {
+          await handleLogin(email, password);
+          // onAuthStateChanged in initAuthGuard will fire → redirect to dashboard.html
+        } catch (err) {
+          let msg = 'Sign-in failed. Please check your credentials.';
+          if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+            msg = 'Invalid email or password. Please try again.';
+          } else if (err.code === 'auth/too-many-requests') {
+            msg = 'Too many failed attempts. Please wait before trying again.';
+          } else if (err.code === 'auth/network-request-failed') {
+            msg = 'Network error. Please check your internet connection.';
+          }
+          errorText.innerText = msg;
+          errorDiv.classList.remove('hidden');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<i data-lucide="log-in" style="width: 16px; height: 16px;"></i><span>Sign In to Terminal</span>`;
+          if (window.lucide) lucide.createIcons();
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

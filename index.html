@@ -1,213 +1,665 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>
-    (function() {
-      if (localStorage.getItem('ros_theme') === 'light') {
-        document.documentElement.classList.add('light-theme');
-      }
-    })();
-  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RestaurantOS — Staff Sign In</title>
-  <meta name="description" content="Restaurant POS terminal login — sign in with your staff credentials to access the RestaurantOS portal.">
-  
-  <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/components.css">
-  
-  <!-- Lucide Icons CDN -->
+  <title>RestaurantOS — Modern POS for Indian Restaurants | QR Ordering, KDS & Analytics</title>
+  <meta name="description" content="RestaurantOS is a cloud-based restaurant POS system with QR code ordering, real-time kitchen display, GST-ready billing, and owner analytics dashboard. Built for Indian restaurants.">
+  <meta name="keywords" content="restaurant POS, QR code ordering, kitchen display system, GST billing, Indian restaurant software, digital menu, table management">
+  <meta property="og:title" content="RestaurantOS — Modern POS for Indian Restaurants">
+  <meta property="og:description" content="All-in-one cloud POS with QR ordering, KDS, and GST-ready billing. Built for the modern Indian restaurant.">
+  <meta property="og:type" content="website">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
-  <!-- Floating Theme Toggle Button -->
-  <button id="theme-toggle-btn" style="position: absolute; top: 20px; right: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: hsla(222, 47%, 12%, 0.6); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 10px; transition: all 0.2s ease; z-index: 10000;" title="Toggle Light/Dark Theme">
-    <i data-lucide="sun" id="theme-sun-icon" style="width: 16px; height: 16px; display: none;"></i>
-    <i data-lucide="moon" id="theme-moon-icon" style="width: 16px; height: 16px;"></i>
-  </button>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="#" class="nav-brand">
+        <div class="nav-logo">
+          <i data-lucide="chef-hat"></i>
+        </div>
+        <span class="nav-brand-text">RestaurantOS</span>
+      </a>
 
-  <!-- 1. FIREBASE NOT CONFIGURED OVERLAY -->
-  <div id="credential-overlay" class="credential-overlay hidden" style="display:none;">
-    <div class="glass-panel animate-slide-up" style="padding: 32px; max-width: 520px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center;">
-      <div style="width: 64px; height: 64px; border-radius: 16px; background: hsla(262, 83%, 18%, 0.4); border: 1px solid hsla(262, 83%, 58%, 0.3); display: flex; align-items: center; justify-content: center; color: hsl(262, 83%, 68%);">
-        <i data-lucide="shield-alert" style="width: 32px; height: 32px;"></i>
-      </div>
-      <div>
-        <h2 style="font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px;">Firebase Setup Required</h2>
-        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.65;">
-          To use RestaurantOS you need to connect it to your own Firebase project. Follow the steps below:
-        </p>
-      </div>
-      
-      <div style="width: 100%; text-align: left; background: hsla(222, 47%, 2%, 0.8); border: 1px solid var(--border-color); padding: 16px 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 12px; color: var(--text-main);">
-        <p><strong>Step 1:</strong> Go to the <a href="https://console.firebase.google.com/" target="_blank" style="color: var(--primary-hover); text-decoration: underline;">Firebase Console</a> and create a new project.</p>
-        <p><strong>Step 2:</strong> Enable <strong>Firestore Database</strong> and <strong>Authentication</strong> (Email/Password sign-in provider).</p>
-        <p><strong>Step 3:</strong> Register a Web app and copy the <code>firebaseConfig</code> object.</p>
-        <p><strong>Step 4:</strong> Open <code style="background: hsla(222, 47%, 4%, 0.8); padding: 2px 5px; border-radius: 4px; color: var(--primary-hover); font-family: monospace;">js/config.js</code> and paste your project keys inside <code>firebaseConfig</code>.</p>
-      </div>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#showcase">Product</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#testimonials">Reviews</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
 
-      <div style="display: flex; gap: 12px; width: 100%;">
-        <a href="setup.html" class="btn btn-secondary" style="flex: 1; text-align: center;">
-          <i data-lucide="settings-2" style="width: 16px; height: 16px;"></i>
-          <span>First-Time Setup</span>
-        </a>
-        <button onclick="window.location.reload()" class="btn btn-primary" style="flex: 1;">
-          <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
-          <span>Reload App</span>
-        </button>
+      <a href="https://unicornsgroup.github.io/restaurantos/" target="_blank" class="nav-cta nav-cta-desktop">
+        Live Demo
+        <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="hero" id="hero">
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-text">
+          <div class="hero-badge">
+            <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+            Built for Indian Restaurants
+          </div>
+
+          <h1 class="hero-title">
+            Your restaurant,<br>
+            <span class="text-gradient">fully digital.</span>
+          </h1>
+
+          <p class="hero-desc">
+            RestaurantOS is an all-in-one cloud POS system with QR code table ordering, 
+            real-time kitchen display, GST-ready billing, and powerful owner analytics — 
+            everything you need to run a modern restaurant.
+          </p>
+
+          <div class="hero-actions">
+            <a href="https://unicornsgroup.github.io/restaurantos/" target="_blank" class="btn-hero btn-hero-primary">
+              <i data-lucide="play" style="width: 18px; height: 18px;"></i>
+              Try Live Demo
+            </a>
+            <a href="#features" class="btn-hero btn-hero-secondary">
+              <i data-lucide="layers" style="width: 18px; height: 18px;"></i>
+              Explore Features
+            </a>
+          </div>
+
+          <div class="hero-stats">
+            <div>
+              <div class="hero-stat-num text-gradient">500+</div>
+              <div class="hero-stat-label">Restaurants Onboarded</div>
+            </div>
+            <div>
+              <div class="hero-stat-num text-gradient">50K+</div>
+              <div class="hero-stat-label">Orders Processed Daily</div>
+            </div>
+            <div>
+              <div class="hero-stat-num text-gradient">99.9%</div>
+              <div class="hero-stat-label">System Uptime</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-image reveal">
+          <img src="images/hero-dashboard.png" alt="RestaurantOS Dashboard Preview" loading="eager">
+
+          <div class="hero-floating-card card-1">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: hsla(142, 70%, 45%, 0.15); display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="trending-up" style="width: 18px; height: 18px; color: hsl(142, 70%, 45%);"></i>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;">Today's Sales</div>
+                <div style="font-size: 20px; font-weight: 800;">₹24,580</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-floating-card card-2">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: hsla(262, 83%, 58%, 0.15); display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="qr-code" style="width: 18px; height: 18px; color: hsl(262, 83%, 58%);"></i>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;">QR Orders</div>
+                <div style="font-size: 20px; font-weight: 800;">142</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       TRUST STRIP
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="trust-strip">
+    <div class="container">
+      <div class="trust-label">Trusted by restaurants across India</div>
+      <div class="trust-logos">
+        <span>☕ Café Culture</span>
+        <span>🍛 Spice Garden</span>
+        <span>🍕 Slice House</span>
+        <span>🥘 Biryani Blues</span>
+        <span>🍜 Noodle Box</span>
+        <span>🧁 Sugar Craft</span>
       </div>
     </div>
   </div>
 
-  <!-- 2. MAIN LOGIN CARD -->
-  <div class="auth-container">
-    <div id="login-card" class="glass-panel auth-card animate-slide-up">
-      
-      <!-- Restaurant Branding -->
-      <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 28px; text-align: center;">
-        <img id="login-restaurant-logo" style="width: 64px; height: 64px; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 14px rgba(0,0,0,0.35); border: 1px solid hsla(262, 83%, 58%, 0.25); margin-bottom: 12px; display: none;" alt="Restaurant Logo">
-        <div id="login-sparkles-fallback" style="width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, var(--primary), hsl(262, 83%, 38%)); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px var(--primary-glow); margin-bottom: 12px;">
-          <i data-lucide="sparkles" style="width: 22px; height: 22px; color: #fff;"></i>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       FEATURES
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label reveal">
+          <i data-lucide="zap" style="width: 12px; height: 12px;"></i>
+          Core Platform
         </div>
-        <h1 id="login-restaurant-name" style="font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.02em;">RestaurantOS</h1>
-        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Sign in to access your POS portal</p>
+        <h2 class="section-title reveal">Everything your restaurant <span class="text-gradient">needs to thrive</span></h2>
+        <p class="section-subtitle mx-auto reveal">From table-side QR ordering to real-time kitchen routing and GST-compliant exports, RestaurantOS handles every aspect of your restaurant operations.</p>
       </div>
-      
-      <!-- Error Alert -->
-      <div id="login-error" class="hidden" style="color: var(--danger); font-size: 12px; background: var(--danger-glow); border: 1px solid hsla(346, 80%, 55%, 0.3); padding: 12px 14px; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-        <i data-lucide="alert-circle" style="width: 14px; height: 14px; flex-shrink: 0;"></i>
-        <span id="login-error-text"></span>
+
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon" style="background: hsla(262, 83%, 58%, 0.12); color: var(--primary);">
+            <i data-lucide="qr-code" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 class="feature-title">QR Code Ordering</h3>
+          <p class="feature-desc">Auto-generate unique QR codes for each table. Customers scan, browse the digital menu, and place orders directly from their phones — no waiters needed.</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon" style="background: hsla(190, 90%, 48%, 0.12); color: var(--secondary);">
+            <i data-lucide="monitor-smartphone" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 class="feature-title">Kitchen Display (KDS)</h3>
+          <p class="feature-desc">Orders land instantly on your kitchen screen with real-time status tracking — received, preparing, ready. No paper tickets, no confusion.</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon" style="background: hsla(142, 70%, 45%, 0.12); color: var(--success);">
+            <i data-lucide="indian-rupee" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 class="feature-title">GST-Ready Billing</h3>
+          <p class="feature-desc">Auto-calculate CGST/SGST based on your state code. Export CA-ready tax reports with HSN codes for seamless compliance filing.</p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon" style="background: hsla(346, 80%, 55%, 0.12); color: var(--danger);">
+            <i data-lucide="bar-chart-3" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 class="feature-title">Owner Analytics</h3>
+          <p class="feature-desc">Real-time dashboard with daily sales, table occupancy, order volume, 7-day revenue charts, and recent transaction history — all at a glance.</p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon" style="background: hsla(38, 92%, 50%, 0.12); color: var(--warning);">
+            <i data-lucide="layout-grid" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 class="feature-title">Table Management</h3>
+          <p class="feature-desc">Visual table grid with occupancy indicators. Start seatings, assign waiters, and monitor capacity in real-time with drag-and-drop ease.</p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon" style="background: hsla(262, 83%, 58%, 0.12); color: var(--primary);">
+            <i data-lucide="users" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 class="feature-title">Staff & Role Access</h3>
+          <p class="feature-desc">Create owner, kitchen, and waiter accounts with role-based access control. Waiters see only their assigned tables — fully scoped permissions.</p>
+        </div>
       </div>
-      
-      <!-- Login Form -->
-      <form id="login-form-el" style="display: flex; flex-direction: column; gap: 16px;">
-        <div>
-          <label for="login-email">Email Address</label>
-          <input type="email" id="login-email" required placeholder="owner@restaurant.com" autocomplete="email">
-        </div>
-        <div>
-          <label for="login-password">Password</label>
-          <input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password">
-        </div>
-        <button type="submit" id="login-submit-btn" class="btn btn-primary" style="width: 100%; margin-top: 6px; padding: 12px 24px; font-size: 15px;">
-          <i data-lucide="log-in" style="width: 16px; height: 16px;"></i>
-          <span>Sign In to Terminal</span>
-        </button>
-      </form>
-      
-      <!-- Setup Link -->
-      <p style="text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px;">
-        New installation? <a href="setup.html" style="color: var(--primary-hover); font-weight: 600; text-decoration: none;">Run Setup Wizard</a>
-      </p>
     </div>
-  </div>
+  </section>
 
-  <!-- ES MODULE SCRIPTS -->
-  <script type="module">
-    import { isConfigured } from './js/firebase-config.js';
-    import { initAuthGuard, handleLogin } from './js/auth.js';
-    import { restaurantConfig } from './js/config.js';
 
-    window.addEventListener('DOMContentLoaded', () => {
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       PRODUCT SHOWCASE
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="section" id="showcase" style="background: var(--gradient-hero);">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label reveal">
+          <i data-lucide="monitor" style="width: 12px; height: 12px;"></i>
+          Product Tour
+        </div>
+        <h2 class="section-title reveal">See it in <span class="text-gradient">action</span></h2>
+        <p class="section-subtitle mx-auto reveal">Click through the tabs to explore each module of the RestaurantOS platform.</p>
+      </div>
+
+      <div class="showcase-tabs reveal">
+        <button class="showcase-tab active" data-tab="dashboard">📊 Dashboard</button>
+        <button class="showcase-tab" data-tab="qr-menu">📱 QR Menu</button>
+        <button class="showcase-tab" data-tab="kitchen">👨‍🍳 Kitchen KDS</button>
+      </div>
+
+      <div class="showcase-image-wrapper reveal">
+        <img src="images/hero-dashboard.png" alt="RestaurantOS Analytics Dashboard" class="showcase-img active" data-tab="dashboard">
+        <img src="images/qr-menu.png" alt="QR Code Digital Menu" class="showcase-img" data-tab="qr-menu">
+        <img src="images/kitchen-kds.png" alt="Kitchen Display System" class="showcase-img" data-tab="kitchen">
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       HOW IT WORKS
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label reveal">
+          <i data-lucide="rocket" style="width: 12px; height: 12px;"></i>
+          Getting Started
+        </div>
+        <h2 class="section-title reveal">Up and running in <span class="text-gradient">4 simple steps</span></h2>
+        <p class="section-subtitle mx-auto reveal">No complex installations, no expensive hardware. Just configure, customize, and launch your digital restaurant.</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card reveal reveal-delay-1">
+          <div class="step-number">1</div>
+          <h3 class="step-title">Create Account</h3>
+          <p class="step-desc">Sign up and connect your Firebase project. RestaurantOS provisions your secure cloud database in seconds.</p>
+        </div>
+
+        <div class="step-card reveal reveal-delay-2">
+          <div class="step-number">2</div>
+          <h3 class="step-title">Configure Menu</h3>
+          <p class="step-desc">Add your categories and dishes via the visual menu builder. Set prices, tags, and optional dish images.</p>
+        </div>
+
+        <div class="step-card reveal reveal-delay-3">
+          <div class="step-number">3</div>
+          <h3 class="step-title">Setup Tables</h3>
+          <p class="step-desc">Define your seating layout and generate unique QR codes for each table. Print and place on table stands.</p>
+        </div>
+
+        <div class="step-card reveal reveal-delay-4">
+          <div class="step-number">4</div>
+          <h3 class="step-title">Go Live!</h3>
+          <p class="step-desc">Customers scan QR codes to order. Orders flow to your KDS. Billing prints instantly. You're digital.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       PRICING
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="section" id="pricing" style="background: var(--gradient-hero);">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label reveal">
+          <i data-lucide="credit-card" style="width: 12px; height: 12px;"></i>
+          Simple Pricing
+        </div>
+        <h2 class="section-title reveal">Plans that <span class="text-gradient">scale with you</span></h2>
+        <p class="section-subtitle mx-auto reveal">Choose the plan that fits your business. Simple pricing with no hidden fees and zero transaction charges.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Monthly — Popular -->
+        <div class="pricing-card popular reveal reveal-delay-1">
+          <div class="pricing-plan-name">Monthly</div>
+          <div class="pricing-amount">₹1,299<span style="font-size: 18px; font-weight: 500; color: var(--text-secondary);">/mo</span></div>
+          <div class="pricing-period">Billed monthly, cancel anytime</div>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> Unlimited tables & bookings</li>
+            <li><span class="check">✓</span> Interactive QR table menus</li>
+            <li><span class="check">✓</span> Advanced KDS (Kitchen Display System)</li>
+            <li><span class="check">✓</span> Real-time owner analytics dashboard</li>
+            <li><span class="check">✓</span> GST-ready billing & CSV reports</li>
+            <li><span class="check">✓</span> Staff accounts with role access control</li>
+            <li><span class="check">✓</span> Regular software updates</li>
+            <li><span class="check">✓</span> Priority customer support</li>
+          </ul>
+          <button class="btn-pricing btn-pricing-primary">Subscribe Now</button>
+        </div>
+
+        <!-- One-Time / Lifetime -->
+        <div class="pricing-card reveal reveal-delay-2">
+          <div class="pricing-plan-name">One-Time</div>
+          <div class="pricing-amount">₹19,999</div>
+          <div class="pricing-period">One-time purchase, lifetime access</div>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> Everything in Monthly plan</li>
+            <li><span class="check">✓</span> No monthly subscription fees</li>
+            <li><span class="check">✓</span> Lifetime software updates</li>
+            <li><span class="check">✓</span> Cloud setup assistance & database config</li>
+            <li><span class="check">✓</span> Custom restaurant branding & logo integration</li>
+            <li><span class="check">✓</span> Multi-outlet reporting features</li>
+            <li><span class="check">✓</span> 24/7 dedicated support</li>
+          </ul>
+          <button class="btn-pricing btn-pricing-secondary">Buy Lifetime License</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       TESTIMONIALS
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="section" id="testimonials">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label reveal">
+          <i data-lucide="heart" style="width: 12px; height: 12px;"></i>
+          Customer Stories
+        </div>
+        <h2 class="section-title reveal">Loved by <span class="text-gradient">restaurant owners</span></h2>
+        <p class="section-subtitle mx-auto reveal">Hear from restaurateurs who've transformed their operations with RestaurantOS.</p>
+      </div>
+
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal reveal-delay-1">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"We eliminated paper tickets completely. Orders go straight from the customer's phone to the kitchen screen. Our table turn time dropped by 25% in the first month."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">RS</div>
+            <div>
+              <div class="testimonial-name">Rajesh Sharma</div>
+              <div class="testimonial-role">Owner, Spice Garden • Pune</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card reveal reveal-delay-2">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"The GST export feature alone saves us 3 hours every week. Our CA was thrilled when we sent them a perfectly formatted tax report — no more manual entry."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">PM</div>
+            <div>
+              <div class="testimonial-name">Priya Menon</div>
+              <div class="testimonial-role">Manager, Café Culture • Mumbai</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card reveal reveal-delay-3">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-text">"My customers love ordering via QR code — it feels premium. The multi-language support means even our international tourists can browse the menu in their own language."</p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">AK</div>
+            <div>
+              <div class="testimonial-name">Amit Kapoor</div>
+              <div class="testimonial-role">Founder, Slice House • Delhi</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       FAQ
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label reveal">
+          <i data-lucide="help-circle" style="width: 12px; height: 12px;"></i>
+          FAQ
+        </div>
+        <h2 class="section-title reveal">Frequently asked <span class="text-gradient">questions</span></h2>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item reveal">
+          <button class="faq-question">
+            Do I need special hardware to use RestaurantOS?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">No. RestaurantOS runs entirely in the browser — any laptop, tablet, or phone with a modern browser will work. For kitchen display, you can use any mounted tablet or TV with a browser. For receipt printing, any USB or Bluetooth thermal printer is supported.</div>
+          </div>
+        </div>
+
+        <div class="faq-item reveal">
+          <button class="faq-question">
+            Is it GST compliant for Indian restaurants?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">Absolutely. RestaurantOS auto-calculates CGST and SGST based on your registered state code and GSTIN. You can export CA-ready tax reports with HSN code 9963 directly from the dashboard — perfect for quarterly filing.</div>
+          </div>
+        </div>
+
+        <div class="faq-item reveal">
+          <button class="faq-question">
+            Can customers order without downloading an app?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">Yes! Customers simply scan the QR code on their table with their phone camera. It opens the digital menu directly in the browser — no app install required. They can browse, add items to cart, include chef notes, and place the order all from their phone.</div>
+          </div>
+        </div>
+
+        <div class="faq-item reveal">
+          <button class="faq-question">
+            Does it support multiple staff roles?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">Yes. You can create Owner Admin, Kitchen Staff, and Waiter accounts. Each role has scoped access — waiters only see their assigned tables, kitchen staff only see the KDS, and owner admins get full dashboard access including analytics, settings, and staff management.</div>
+          </div>
+        </div>
+
+        <div class="faq-item reveal">
+          <button class="faq-question">
+            Can I customize the menu design and branding?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">Yes. You can upload your restaurant logo, set a custom name and tagline, choose your currency symbol, and the entire digital menu experience is branded with your identity. The customer-facing QR menu shows your logo and restaurant name prominently.</div>
+          </div>
+        </div>
+
+        <div class="faq-item reveal">
+          <button class="faq-question">
+            Is my data secure?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">RestaurantOS uses Firebase with strict Firestore security rules ensuring complete data isolation between restaurants. Authentication is handled via Firebase Auth with email/password sign-in. All data is encrypted in transit and at rest on Google's infrastructure.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       CTA BANNER
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="container">
+      <div class="cta-banner reveal">
+        <div class="glow-orb"></div>
+        <h2>Ready to go digital?</h2>
+        <p>Join 500+ Indian restaurants already using RestaurantOS to streamline operations and delight customers.</p>
+        <div class="cta-actions">
+          <a href="https://unicornsgroup.github.io/restaurantos/" target="_blank" class="btn-hero btn-hero-primary">
+            <i data-lucide="rocket" style="width: 18px; height: 18px;"></i>
+            Try the Live Demo
+          </a>
+          <a href="#pricing" class="btn-hero btn-hero-secondary">
+            <i data-lucide="credit-card" style="width: 18px; height: 18px;"></i>
+            View Pricing
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a href="#" class="nav-brand" style="margin-bottom: 4px;">
+            <div class="nav-logo">
+              <i data-lucide="chef-hat"></i>
+            </div>
+            <span class="nav-brand-text">RestaurantOS</span>
+          </a>
+          <p class="footer-brand-desc">
+            India's modern cloud-based restaurant POS system. QR ordering, kitchen display, GST billing, and owner analytics — all in one platform.
+          </p>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Product</div>
+          <ul class="footer-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#showcase">Product Tour</a></li>
+            <li><a href="https://unicornsgroup.github.io/restaurantos/" target="_blank">Live Demo</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Resources</div>
+          <ul class="footer-links">
+            <li><a href="#faq">FAQ</a></li>
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">API Reference</a></li>
+            <li><a href="#">Changelog</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Company</div>
+          <ul class="footer-links">
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 RestaurantOS by UnicornsGroup. All rights reserved.</span>
+        <div class="footer-social">
+          <a href="#" aria-label="Twitter"><i data-lucide="twitter" style="width: 16px; height: 16px;"></i></a>
+          <a href="#" aria-label="LinkedIn"><i data-lucide="linkedin" style="width: 16px; height: 16px;"></i></a>
+          <a href="https://github.com/UnicornsGroup/restaurantos/Demo" target="_blank" aria-label="GitHub"><i data-lucide="github" style="width: 16px; height: 16px;"></i></a>
+          <a href="#" aria-label="Instagram"><i data-lucide="instagram" style="width: 16px; height: 16px;"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SCRIPTS
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
       // Initialize Lucide icons
       if (window.lucide) lucide.createIcons();
 
-      // Theme Toggle logic
-      const themeToggleBtn = document.getElementById('theme-toggle-btn');
-      if (themeToggleBtn) {
-        const sunIcon = document.getElementById('theme-sun-icon');
-        const moonIcon = document.getElementById('theme-moon-icon');
-        
-        const currentTheme = localStorage.getItem('ros_theme') || 'dark';
-        if (currentTheme === 'light') {
-          if (sunIcon) sunIcon.style.display = 'none';
-          if (moonIcon) moonIcon.style.display = 'block';
-        } else {
-          if (sunIcon) sunIcon.style.display = 'block';
-          if (moonIcon) moonIcon.style.display = 'none';
-        }
-
-        themeToggleBtn.addEventListener('click', () => {
-          const isLight = document.documentElement.classList.contains('light-theme');
-          if (isLight) {
-            document.documentElement.classList.remove('light-theme');
-            localStorage.setItem('ros_theme', 'dark');
-            if (sunIcon) sunIcon.style.display = 'block';
-            if (moonIcon) moonIcon.style.display = 'none';
-          } else {
-            document.documentElement.classList.add('light-theme');
-            localStorage.setItem('ros_theme', 'light');
-            if (sunIcon) sunIcon.style.display = 'none';
-            if (moonIcon) moonIcon.style.display = 'block';
-          }
-        });
-      }
-
-      if (!isConfigured) {
-        // Show setup instructions overlay
-        const overlay = document.getElementById('credential-overlay');
-        overlay.style.display = 'flex';
-        overlay.classList.remove('hidden');
-        document.querySelector('.auth-container').style.display = 'none';
-        if (window.lucide) lucide.createIcons();
-        return;
-      }
-
-      // Render restaurant branding from config.js
-      const loginLogo = document.getElementById('login-restaurant-logo');
-      const loginName = document.getElementById('login-restaurant-name');
-      const sparklesFallback = document.getElementById('login-sparkles-fallback');
-
-      if (restaurantConfig.logoUrl) {
-        loginLogo.src = restaurantConfig.logoUrl;
-        loginLogo.style.display = 'block';
-        sparklesFallback.style.display = 'none';
-      }
-      loginName.innerText = restaurantConfig.name || 'RestaurantOS';
-
-      // Auth guard — redirect to dashboard if already logged in
-      initAuthGuard('login', (user, restaurant) => {
-        if (user) {
-          window.location.href = 'dashboard.html';
-        }
-        // If null user, we stay on this page and show the login form
+      // ─── Navbar scroll effect ───
+      const navbar = document.getElementById('navbar');
+      window.addEventListener('scroll', () => {
+        navbar.classList.toggle('scrolled', window.scrollY > 40);
       });
 
-      // Handle login form submission
-      const loginFormEl = document.getElementById('login-form-el');
-      const errorDiv = document.getElementById('login-error');
-      const errorText = document.getElementById('login-error-text');
-      const submitBtn = document.getElementById('login-submit-btn');
+      // ─── Mobile nav toggle ───
+      const navToggle = document.getElementById('nav-toggle');
+      const navLinks = document.getElementById('nav-links');
+      navToggle.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+      });
 
-      loginFormEl.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value.trim();
-        const password = document.getElementById('login-password').value;
+      // Close mobile nav on link click
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => navLinks.classList.remove('active'));
+      });
 
-        errorDiv.classList.add('hidden');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<div style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; animation: spin 0.8s linear infinite;"></div><span>Signing in...</span>`;
+      // ─── Showcase tabs ───
+      const tabs = document.querySelectorAll('.showcase-tab');
+      const images = document.querySelectorAll('.showcase-img');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const target = tab.dataset.tab;
+          images.forEach(img => {
+            img.classList.toggle('active', img.dataset.tab === target);
+          });
+        });
+      });
 
-        try {
-          await handleLogin(email, password);
-          // onAuthStateChanged in initAuthGuard will fire → redirect to dashboard.html
-        } catch (err) {
-          let msg = 'Sign-in failed. Please check your credentials.';
-          if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-            msg = 'Invalid email or password. Please try again.';
-          } else if (err.code === 'auth/too-many-requests') {
-            msg = 'Too many failed attempts. Please wait before trying again.';
-          } else if (err.code === 'auth/network-request-failed') {
-            msg = 'Network error. Please check your internet connection.';
+      // ─── FAQ accordion ───
+      const faqItems = document.querySelectorAll('.faq-item');
+      faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        const answer = item.querySelector('.faq-answer');
+        question.addEventListener('click', () => {
+          const isActive = item.classList.contains('active');
+          // Close all others
+          faqItems.forEach(other => {
+            other.classList.remove('active');
+            other.querySelector('.faq-answer').style.maxHeight = '0';
+          });
+          // Toggle current
+          if (!isActive) {
+            item.classList.add('active');
+            answer.style.maxHeight = answer.scrollHeight + 'px';
           }
-          errorText.innerText = msg;
-          errorDiv.classList.remove('hidden');
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = `<i data-lucide="log-in" style="width: 16px; height: 16px;"></i><span>Sign In to Terminal</span>`;
-          if (window.lucide) lucide.createIcons();
-        }
+        });
+      });
+
+      // ─── Scroll reveal observer ───
+      const revealElements = document.querySelectorAll('.reveal');
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      });
+
+      revealElements.forEach(el => revealObserver.observe(el));
+
+      // ─── Smooth scroll for anchor links ───
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = document.querySelector(anchor.getAttribute('href'));
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
       });
     });
   </script>
