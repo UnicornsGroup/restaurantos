@@ -3,6 +3,7 @@ import { initAuthGuard } from './auth.js';
 import { updateTableStatus } from './db.js';
 import { subscribeTables } from './realtime.js';
 import { toggleModal } from './utils.js';
+import { generateTableQrUrl } from './qr-generator.js';
 
 let activeUser = null;
 let activeRestaurant = null;
@@ -81,7 +82,8 @@ const renderTables = () => {
       const table = tablesList.find(t => t.id === btn.dataset.id);
       if (table) {
         qrTableName.innerText = table.table_number;
-        qrImage.src = table.qr_code_url;
+        // Always generate fresh QR from current qrBaseUrl in config.js
+        qrImage.src = generateTableQrUrl(table.id);
         toggleModal(qrModal, true);
       }
     });

@@ -22,5 +22,5 @@ export const restaurantConfig = {
   //   • ngrok:       "https://abc123.ngrok.io"
   //   • Local IP:    "http://192.168.1.xxx:5173"  (find with: ipconfig on Windows)
   //   • Leave ""     to auto-use window.location.origin (only works on same device)
-  qrBaseUrl: "http://10.200.2.16:5173"
+  qrBaseUrl: "https://unicornsgroup.github.io/restaurantos"
 };
