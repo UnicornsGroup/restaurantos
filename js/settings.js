@@ -16,12 +16,16 @@ const initSettingsPage = async () => {
       const descEl = document.getElementById('set-rest-desc');
       const currencyEl = document.getElementById('set-rest-currency');
       const slugEl = document.getElementById('set-rest-slug');
+      const gstinEl = document.getElementById('set-rest-gstin');
+      const stateEl = document.getElementById('set-rest-state');
 
       if (nameEl) nameEl.value = settings.name || '';
       if (logoEl) logoEl.value = settings.logoUrl || '';
       if (descEl) descEl.value = settings.description || '';
       if (currencyEl) currencyEl.value = settings.currency || '₹';
       if (slugEl) slugEl.value = settings.slug || '';
+      if (gstinEl) gstinEl.value = settings.gstin || '';
+      if (stateEl) stateEl.value = settings.stateCode || '27';
 
       // Show live logo preview if URL exists
       if (settings.logoUrl) {
@@ -55,6 +59,8 @@ const initSettingsPage = async () => {
       const logoUrl = document.getElementById('set-rest-logo').value.trim();
       const description = document.getElementById('set-rest-desc').value.trim();
       const currency = document.getElementById('set-rest-currency').value.trim();
+      const gstin = document.getElementById('set-rest-gstin').value.trim().toUpperCase();
+      const stateCode = document.getElementById('set-rest-state').value;
 
       const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
@@ -63,7 +69,7 @@ const initSettingsPage = async () => {
       submitBtn.innerText = 'Saving...';
 
       try {
-        await saveRestaurantSettings({ name, logoUrl, description, currency, slug });
+        await saveRestaurantSettings({ name, logoUrl, description, currency, slug, gstin, stateCode });
         if (alertSuccess) {
           alertSuccess.innerText = 'Business settings saved successfully!';
           alertSuccess.classList.remove('hidden');

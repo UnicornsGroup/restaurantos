@@ -107,6 +107,34 @@
                 </tbody>
               </table>
             </div>
+        </div>
+
+        <!-- GST Tax Report Panel -->
+        <div class="glass-panel chart-card" style="margin-top: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+            <div>
+              <h3 style="font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; margin: 0;">
+                <i data-lucide="file-spreadsheet" style="width: 20px; height: 20px; color: var(--success);"></i>
+                CA-Ready GST Taxation Report
+              </h3>
+              <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px; margin-bottom: 0;">
+                Export order tax splits (HSN code 9963) directly into a compliant CSV spreadsheet.
+              </p>
+            </div>
+            
+            <form id="gst-export-form" style="display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;">
+              <div style="display: flex; flex-direction: column; width: 140px;">
+                <label for="gst-start-date" style="font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Start Date</label>
+                <input type="date" id="gst-start-date" required style="padding: 8px 12px; font-size: 13px; height: 38px;">
+              </div>
+              <div style="display: flex; flex-direction: column; width: 140px;">
+                <label for="gst-end-date" style="font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">End Date</label>
+                <input type="date" id="gst-end-date" required style="padding: 8px 12px; font-size: 13px; height: 38px;">
+              </div>
+              <button type="submit" class="btn btn-primary" style="height: 38px; padding: 0 16px; font-size: 13px;">
+                <i data-lucide="download" style="width: 16px; height: 16px;"></i> Export CSV
+              </button>
+            </form>
           </div>
         </div>
 

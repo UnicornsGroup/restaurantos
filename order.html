@@ -55,6 +55,37 @@
             </div>
           </div>
 
+          <!-- Customer / B2B Details -->
+          <div style="margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 8px;" id="toggle-customer-details">
+              <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
+                <i data-lucide="user" style="width: 12px; height: 12px;"></i>
+                Customer / B2B Details
+              </span>
+              <i data-lucide="chevron-down" id="chevron-customer-details" style="width: 14px; height: 14px; color: var(--text-muted); transition: transform 0.2s;"></i>
+            </div>
+            <div id="customer-details-fields" style="display: none; flex-direction: column; gap: 8px; margin-top: 8px;">
+              <div>
+                <label for="order-customer-name" style="font-size: 8px; margin-bottom: 3px;">Customer Name</label>
+                <input type="text" id="order-customer-name" placeholder="e.g. Rahul Sharma" style="padding: 6px 10px; font-size: 12px; height: 32px;">
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <div style="flex: 1;">
+                  <label for="order-customer-mobile" style="font-size: 8px; margin-bottom: 3px;">Mobile Number</label>
+                  <input type="tel" id="order-customer-mobile" placeholder="10-digit number" style="padding: 6px 10px; font-size: 12px; height: 32px;" maxlength="10">
+                </div>
+                <div style="flex: 1.2;">
+                  <label for="order-customer-gstin" style="font-size: 8px; margin-bottom: 3px;">GSTIN (B2B)</label>
+                  <input type="text" id="order-customer-gstin" placeholder="e.g. 27AABC1234F1Z5" style="padding: 6px 10px; font-size: 12px; height: 32px; text-transform: uppercase;" maxlength="15">
+                </div>
+              </div>
+              <div>
+                <label for="order-customer-company" style="font-size: 8px; margin-bottom: 3px;">Company Name</label>
+                <input type="text" id="order-customer-company" placeholder="e.g. Acme Enterprises" style="padding: 6px 10px; font-size: 12px; height: 32px;">
+              </div>
+            </div>
+          </div>
+
           <!-- Checkout active cart rows list -->
           <div id="cart-items-wrapper" class="cart-items-wrapper">
             <!-- Dynamic order rows -->

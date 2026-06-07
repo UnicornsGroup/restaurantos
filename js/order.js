@@ -56,6 +56,19 @@ const initOrderPage = () => {
   if (btnSendKds) btnSendKds.addEventListener('click', handleSendKdsOrder);
   if (btnPayPrint) btnPayPrint.addEventListener('click', handleSettleAndPrintBill);
 
+  const toggleBtn = document.getElementById('toggle-customer-details');
+  const detailsFields = document.getElementById('customer-details-fields');
+  const chevron = document.getElementById('chevron-customer-details');
+  if (toggleBtn && detailsFields) {
+    toggleBtn.addEventListener('click', () => {
+      const isHidden = detailsFields.style.display === 'none';
+      detailsFields.style.display = isHidden ? 'flex' : 'none';
+      if (chevron) {
+        chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
+    });
+  }
+
   // Subscriptions
   subscribeTables((tables) => {
     tablesList = tables.sort((a, b) => String(a.table_number || '').localeCompare(String(b.table_number || '')));
@@ -249,6 +262,18 @@ const loadTableCartAndBill = () => {
     cart = [];
     discountAmount = 0;
     if (discountInput) discountInput.value = '';
+    
+    // Reset customer fields
+    if (document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = '';
+    if (document.getElementById('order-customer-mobile')) document.getElementById('order-customer-mobile').value = '';
+    if (document.getElementById('order-customer-gstin')) document.getElementById('order-customer-gstin').value = '';
+    if (document.getElementById('order-customer-company')) document.getElementById('order-customer-company').value = '';
+    
+    const detailsFields = document.getElementById('customer-details-fields');
+    const chevron = document.getElementById('chevron-customer-details');
+    if (detailsFields) detailsFields.style.display = 'none';
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+    
     renderCart();
     return;
   }
@@ -279,10 +304,37 @@ const loadTableCartAndBill = () => {
     cart = aggregatedItems;
     discountAmount = matchingOrders.reduce((sum, o) => sum + (o.discount || 0), 0);
     if (discountInput) discountInput.value = discountAmount || '';
+
+    // Populate customer fields from the first matching order
+    const firstOrder = matchingOrders[0];
+    if (document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = firstOrder.customer_name || 'Guest';
+    if (document.getElementById('order-customer-mobile')) document.getElementById('order-customer-mobile').value = firstOrder.customer_mobile || '';
+    if (document.getElementById('order-customer-gstin')) document.getElementById('order-customer-gstin').value = firstOrder.customer_gstin || '';
+    if (document.getElementById('order-customer-company')) document.getElementById('order-customer-company').value = firstOrder.customer_company || '';
+    
+    // Auto-expand fields if we have any customer info (e.g. registered customer name/mobile, or B2B details)
+    const detailsFields = document.getElementById('customer-details-fields');
+    const chevron = document.getElementById('chevron-customer-details');
+    if (detailsFields) {
+      const hasInfo = firstOrder.customer_name || firstOrder.customer_mobile || firstOrder.customer_gstin || firstOrder.customer_company;
+      detailsFields.style.display = hasInfo ? 'flex' : 'none';
+      if (chevron) chevron.style.transform = hasInfo ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
   } else {
     cart = [];
     discountAmount = 0;
     if (discountInput) discountInput.value = '';
+
+    // Reset customer fields
+    if (document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = '';
+    if (document.getElementById('order-customer-mobile')) document.getElementById('order-customer-mobile').value = '';
+    if (document.getElementById('order-customer-gstin')) document.getElementById('order-customer-gstin').value = '';
+    if (document.getElementById('order-customer-company')) document.getElementById('order-customer-company').value = '';
+    
+    const detailsFields = document.getElementById('customer-details-fields');
+    const chevron = document.getElementById('chevron-customer-details');
+    if (detailsFields) detailsFields.style.display = 'none';
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
   }
   renderCart();
 };
@@ -301,9 +353,18 @@ const handleSendKdsOrder = async () => {
   const table = tablesList.find(t => t.id === selectedTableId);
   const tableName = table ? table.table_number : 'Takeaway';
 
+  const customerName = document.getElementById('order-customer-name')?.value.trim() || 'Guest';
+  const customerMobile = document.getElementById('order-customer-mobile')?.value.trim() || '';
+  const customerGstin = document.getElementById('order-customer-gstin')?.value.trim().toUpperCase() || '';
+  const customerCompany = document.getElementById('order-customer-company')?.value.trim() || '';
+
   const payload = {
     table_id: selectedTableId,
     table_number: tableName,
+    customer_name: customerName,
+    customer_mobile: customerMobile,
+    customer_gstin: customerGstin,
+    customer_company: customerCompany,
     status: 'received',
     items: cart,
     discount: discountAmount,
@@ -319,7 +380,11 @@ const handleSendKdsOrder = async () => {
       const { doc, updateDoc, db } = await import('./firebase-config.js');
       await updateDoc(doc(db, 'orders', existingOrder.id), {
         items: cart,
-        discount: discountAmount
+        discount: discountAmount,
+        customer_name: customerName,
+        customer_mobile: customerMobile,
+        customer_gstin: customerGstin,
+        customer_company: customerCompany
       });
     } else {
       await createCustomerOrder(payload);
@@ -357,25 +422,37 @@ const handleSettleAndPrintBill = async () => {
     let orderToPrint = null;
     const curSymbol = activeRestaurant?.currency || '₹';
 
+    const customerName = document.getElementById('order-customer-name')?.value.trim() || 'Guest';
+    const customerMobile = document.getElementById('order-customer-mobile')?.value.trim() || '';
+    const customerGstin = document.getElementById('order-customer-gstin')?.value.trim().toUpperCase() || '';
+    const customerCompany = document.getElementById('order-customer-company')?.value.trim() || '';
+
     const matchingOrders = activeOrders.filter(o => o.table_id === selectedTableId && ['received', 'preparing', 'ready', 'served'].includes(o.status));
 
     if (matchingOrders.length > 0) {
       // Settle all active/unpaid orders of this table by setting their status to 'settled'
+      const { doc, updateDoc, db } = await import('./firebase-config.js');
       for (const ord of matchingOrders) {
-        await updateOrderStatus(ord.id, 'settled');
+        await updateDoc(doc(db, 'orders', ord.id), {
+          status: 'settled',
+          customer_name: customerName,
+          customer_mobile: customerMobile,
+          customer_gstin: customerGstin,
+          customer_company: customerCompany
+        });
       }
       // Explicitly free the table status
       await updateTableStatus(selectedTableId, 'free');
 
       const firstOrder = matchingOrders[0];
-      const customerName = firstOrder?.customer_name || 'Guest';
-      const customerMobile = firstOrder?.customer_mobile || '';
 
       orderToPrint = {
         id: firstOrder.id,
         table_number: tableName,
         customer_name: customerName,
         customer_mobile: customerMobile,
+        customer_gstin: customerGstin,
+        customer_company: customerCompany,
         status: 'settled',
         items: itemsToPrint,
         discount: finalDiscount,
@@ -386,8 +463,10 @@ const handleSettleAndPrintBill = async () => {
       const payload = {
         table_id: selectedTableId,
         table_number: tableName,
-        customer_name: 'Guest',
-        customer_mobile: '',
+        customer_name: customerName,
+        customer_mobile: customerMobile,
+        customer_gstin: customerGstin,
+        customer_company: customerCompany,
         status: 'settled',
         items: itemsToPrint,
         discount: finalDiscount,
@@ -407,6 +486,19 @@ const handleSettleAndPrintBill = async () => {
     cart = [];
     discountAmount = 0;
     if (discountInput) discountInput.value = '';
+    
+    // Reset customer fields
+    if (document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = '';
+    if (document.getElementById('order-customer-mobile')) document.getElementById('order-customer-mobile').value = '';
+    if (document.getElementById('order-customer-gstin')) document.getElementById('order-customer-gstin').value = '';
+    if (document.getElementById('order-customer-company')) document.getElementById('order-customer-company').value = '';
+    
+    // Reset collapsible state
+    const detailsFields = document.getElementById('customer-details-fields');
+    const chevron = document.getElementById('chevron-customer-details');
+    if (detailsFields) detailsFields.style.display = 'none';
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+    
     renderCart();
     
     alert('Billing checkout finished! Thermal ticket printed.');

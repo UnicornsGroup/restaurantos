@@ -18,6 +18,120 @@ const kdsKPI = document.getElementById('metric-kds');
 const transactionsBody = document.getElementById('recent-orders-list');
 const chartCanvas = document.getElementById('sales-chart');
 
+const handleGstExport = (e) => {
+  e.preventDefault();
+
+  const startVal = document.getElementById('gst-start-date')?.value;
+  const endVal = document.getElementById('gst-end-date')?.value;
+  if (!startVal || !endVal) {
+    alert("Please select both start and end dates.");
+    return;
+  }
+
+  const startDate = new Date(startVal + 'T00:00:00');
+  const endDate = new Date(endVal + 'T23:59:59');
+
+  const targetOrders = ordersList.filter(order => {
+    if (!['served', 'settled'].includes(order.status)) return false;
+    const createdDate = order.created_at?.toDate ? order.created_at.toDate() : new Date(order.created_at);
+    const t = createdDate.getTime();
+    return t >= startDate.getTime() && t <= endDate.getTime();
+  });
+
+  if (targetOrders.length === 0) {
+    alert("No completed transactions (served or settled status) found in the selected date range.");
+    return;
+  }
+
+  const restGstin = activeRestaurant?.gstin || '';
+  const restState = activeRestaurant?.stateCode || '27';
+  let parsedRestStateCode = restState;
+  if (restGstin && restGstin.length >= 2) {
+    parsedRestStateCode = restGstin.substring(0, 2);
+  }
+
+  const headers = [
+    "Invoice No",
+    "Invoice Date",
+    "Order Type",
+    "Customer Name",
+    "Company Name",
+    "Customer GSTIN",
+    "Taxable Value",
+    "CGST (2.5%)",
+    "SGST (2.5%)",
+    "IGST (5.0%)",
+    "Total GST",
+    "Total Invoice Value",
+    "HSN Code"
+  ];
+
+  const csvRows = [headers.join(",")];
+
+  targetOrders.forEach(order => {
+    // Math splits
+    const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = subtotal * 0.05;
+    const discount = order.discount || 0;
+    const netAmount = subtotal + tax - discount;
+
+    const taxableValue = netAmount / 1.05;
+    const netGst = netAmount - taxableValue;
+
+    // Detect interstate splits
+    const customerGstin = (order.customer_gstin || '').trim();
+    let cgst = 0, sgst = 0, igst = 0;
+
+    if (customerGstin) {
+      const customerStateCode = customerGstin.substring(0, 2);
+      if (customerStateCode !== parsedRestStateCode) {
+        igst = netGst;
+      } else {
+        cgst = netGst / 2;
+        sgst = netGst / 2;
+      }
+    } else {
+      cgst = netGst / 2;
+      sgst = netGst / 2;
+    }
+
+    // Classify sales channel
+    const tblLower = (order.table_number || '').toLowerCase();
+    const isEcommerce = tblLower.includes('zomato') || tblLower.includes('swiggy') || tblLower.includes('uber') || tblLower.includes('delivery') || tblLower.includes('online') || tblLower.includes('e-commerce') || tblLower.includes('ecommerce');
+    const orderType = isEcommerce ? 'E-commerce Section 9(5)' : 'Direct Dine-in/Takeaway';
+
+    const oDate = order.created_at?.toDate ? order.created_at.toDate() : new Date(order.created_at);
+    const dateFormatted = `${String(oDate.getDate()).padStart(2, '0')}-${String(oDate.getMonth() + 1).padStart(2, '0')}-${oDate.getFullYear()}`;
+
+    const row = [
+      `"${order.id.toUpperCase()}"`,
+      `"${dateFormatted}"`,
+      `"${orderType}"`,
+      `"${(order.customer_name || 'Guest').replace(/"/g, '""')}"`,
+      `"${(order.customer_company || '').replace(/"/g, '""')}"`,
+      `"${customerGstin.replace(/"/g, '""')}"`,
+      taxableValue.toFixed(2),
+      cgst.toFixed(2),
+      sgst.toFixed(2),
+      igst.toFixed(2),
+      netGst.toFixed(2),
+      netAmount.toFixed(2),
+      "9963"
+    ];
+    csvRows.push(row.join(","));
+  });
+
+  const csvContent = csvRows.join("\n");
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `GST_Taxation_Report_${startVal}_to_${endVal}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 const initDashboard = () => {
   // Listen to seating layouts
   subscribeTables((tables) => {
@@ -34,6 +148,22 @@ const initDashboard = () => {
   }, (err) => {
     console.error("Dashboard orders sync failed:", err);
   });
+
+  // Initialize GST report date ranges
+  const startInput = document.getElementById('gst-start-date');
+  const endInput = document.getElementById('gst-end-date');
+  if (startInput && endInput) {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const firstDayStr = todayStr.substring(0, 8) + '01';
+    startInput.value = firstDayStr;
+    endInput.value = todayStr;
+  }
+
+  const exportForm = document.getElementById('gst-export-form');
+  if (exportForm) {
+    exportForm.addEventListener('submit', handleGstExport);
+  }
 };
 
 const updateKPIs = () => {
