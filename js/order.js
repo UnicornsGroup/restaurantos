@@ -58,7 +58,7 @@ const initOrderPage = () => {
 
   // Subscriptions
   subscribeTables((tables) => {
-    tablesList = tables.sort((a, b) => a.table_number.localeCompare(b.table_number));
+    tablesList = tables.sort((a, b) => String(a.table_number || '').localeCompare(String(b.table_number || '')));
     populateTablesDropdown();
   });
 

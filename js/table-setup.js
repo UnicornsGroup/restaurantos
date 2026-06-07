@@ -35,7 +35,7 @@ const initTableSetupPage = () => {
 
   // Subscribe to realtime tables list
   subscribeTables((tables) => {
-    tablesList = tables.sort((a, b) => a.table_number.localeCompare(b.table_number));
+    tablesList = tables.sort((a, b) => String(a.table_number || '').localeCompare(String(b.table_number || '')));
     renderTables();
   }, (err) => {
     console.error("Tables sync failed:", err);
