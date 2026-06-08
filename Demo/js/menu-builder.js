@@ -1,6 +1,6 @@
 // Menu Catalog builder controller for menu-builder.html protected panel
 import { initAuthGuard } from './auth.js';
-import { addMenuCategory, deleteMenuCategory, saveMenuItem, toggleItemAvailability } from './db.js';
+import { addMenuCategory, deleteMenuCategory, saveMenuItem, toggleItemAvailability, saveBulkCatalog } from './db.js';
 import { subscribeCategories, subscribeItems } from './realtime.js';
 import { toggleModal, showAlert } from './utils.js';
 
@@ -30,6 +30,11 @@ const itemModal = document.getElementById('item-modal');
 const closeItemModal = document.getElementById('close-item-modal');
 const itemForm = document.getElementById('item-form');
 const itemCatSelect = document.getElementById('item-category-id');
+
+// CSV Actions DOM references
+const exportMenuBtn = document.getElementById('export-menu-btn');
+const importMenuBtn = document.getElementById('import-menu-btn');
+const importMenuCsv = document.getElementById('import-menu-csv');
 
 // Tabs inside Menu configuration
 const itemsSubtab = document.getElementById('menu-items-subtab');
@@ -71,6 +76,7 @@ const initMenuBuilder = () => {
     editingItemId = null;
     document.getElementById('item-modal-title').innerText = 'Create New Dish';
     itemForm.reset();
+    delete itemForm.dataset.imageExtension;
     currentBase64Image = "";
     if (itemImageFile) itemImageFile.value = '';
     if (itemImageFilename) itemImageFilename.innerText = 'No file selected';
@@ -95,6 +101,10 @@ const initMenuBuilder = () => {
 
       if (itemImageFilename) itemImageFilename.innerText = file.name;
 
+      // Track image extension on itemForm dataset
+      const fileNameParts = file.name.split('.');
+      itemForm.dataset.imageExtension = fileNameParts.length > 1 ? fileNameParts[fileNameParts.length - 1] : 'jpg';
+
       const reader = new FileReader();
       reader.onload = (event) => {
         currentBase64Image = event.target.result;
@@ -109,10 +119,20 @@ const initMenuBuilder = () => {
   if (removeItemImageBtn) {
     removeItemImageBtn.addEventListener('click', () => {
       currentBase64Image = "";
+      delete itemForm.dataset.imageExtension;
       if (itemImageFile) itemImageFile.value = '';
       if (itemImageFilename) itemImageFilename.innerText = 'No file selected';
       if (itemImagePreviewContainer) itemImagePreviewContainer.style.display = 'none';
     });
+  }
+
+  // CSV Export/Import listeners
+  if (exportMenuBtn) {
+    exportMenuBtn.addEventListener('click', handleExportMenuCSV);
+  }
+  if (importMenuBtn && importMenuCsv) {
+    importMenuBtn.addEventListener('click', () => importMenuCsv.click());
+    importMenuCsv.addEventListener('change', handleImportMenuCSV);
   }
 
   // Subscriptions
@@ -308,6 +328,8 @@ const handleSaveItemSubmit = async (e) => {
   const tags = tagsStr.split(',').map(t => t.trim()).filter(t => t.length > 0);
   const allergens = allergensStr.split(',').map(a => a.trim()).filter(a => a.length > 0);
 
+  const existingItem = editingItemId ? menuItemsList.find(i => i.id === editingItemId) : null;
+
   const payload = {
     category_id: categoryId,
     category_name: categoryName,
@@ -317,7 +339,8 @@ const handleSaveItemSubmit = async (e) => {
     prep_time: prepTime,
     tags,
     allergens,
-    image: currentBase64Image || ""
+    image: existingItem ? existingItem.image : '',
+    imageExtension: itemForm.dataset.imageExtension || ''
   };
 
   try {
@@ -327,6 +350,207 @@ const handleSaveItemSubmit = async (e) => {
     alert("Error saving menu item: " + err.message);
   }
 };
+
+const handleExportMenuCSV = () => {
+  if (menuItemsList.length === 0) {
+    alert("No menu items to export.");
+    return;
+  }
+
+  const headers = ["Category", "Dish Name", "Description", "Price", "Prep Time (mins)", "Tags", "Allergens", "Image Slug"];
+  const csvRows = [headers.join(",")];
+
+  menuItemsList.forEach(item => {
+    const escapeCsv = (val) => {
+      if (val === null || val === undefined) return '""';
+      const clean = val.toString().replace(/"/g, '""');
+      return `"${clean}"`;
+    };
+
+    const row = [
+      escapeCsv(item.category_name),
+      escapeCsv(item.name),
+      escapeCsv(item.description || ""),
+      item.price,
+      item.prep_time || 15,
+      escapeCsv((item.tags || []).join(", ")),
+      escapeCsv((item.allergens || []).join(", ")),
+      escapeCsv(item.image || "")
+    ];
+    csvRows.push(row.join(","));
+  });
+
+  const csvString = csvRows.join("\r\n");
+  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `menu_export_${activeRestaurant?.slug || 'catalog'}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+const handleImportMenuCSV = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try {
+      const csvText = event.target.result;
+      const parsedRows = parseCSV(csvText);
+      if (parsedRows.length <= 1) {
+        alert("The CSV file is empty or only contains headers.");
+        return;
+      }
+
+      const headers = parsedRows[0].map(h => h.trim().toLowerCase());
+      const categoryIdx = headers.indexOf("category");
+      const nameIdx = headers.indexOf("dish name");
+      const descIdx = headers.indexOf("description");
+      const priceIdx = headers.indexOf("price");
+      const prepIdx = headers.indexOf("prep time (mins)");
+      const tagsIdx = headers.indexOf("tags");
+      const allergensIdx = headers.indexOf("allergens");
+      const imageIdx = headers.indexOf("image slug");
+
+      if (categoryIdx === -1 || nameIdx === -1 || priceIdx === -1) {
+        alert("CSV must contain at least 'Category', 'Dish Name', and 'Price' columns.");
+        return;
+      }
+
+      const categories = [...categoriesCache];
+      const items = [...menuItemsList];
+
+      let importedCount = 0;
+
+      for (let i = 1; i < parsedRows.length; i++) {
+        const row = parsedRows[i];
+        if (row.length <= Math.max(categoryIdx, nameIdx, priceIdx)) continue;
+
+        const catName = row[categoryIdx]?.trim();
+        const dishName = row[nameIdx]?.trim();
+        if (!catName || !dishName) continue;
+
+        const description = descIdx !== -1 ? row[descIdx]?.trim() : "";
+        const price = parseFloat(row[priceIdx]) || 0;
+        const prepTime = prepIdx !== -1 ? parseInt(row[prepIdx]) || 15 : 15;
+        const tags = tagsIdx !== -1 ? row[tagsIdx]?.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
+        const allergens = allergensIdx !== -1 ? row[allergensIdx]?.split(',').map(a => a.trim()).filter(a => a.length > 0) : [];
+        const csvImageSlug = imageIdx !== -1 ? row[imageIdx]?.trim() : "";
+
+        // Find or create category
+        let category = categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+        if (!category) {
+          const newCatId = 'cat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+          category = {
+            id: newCatId,
+            name: catName,
+            display_order: categories.length + 1,
+            routing: 'kitchen',
+            created_at: Date.now()
+          };
+          categories.push(category);
+        }
+
+        // Generate slug
+        const slug = dishName
+          .toLowerCase()
+          .trim()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/[\s_]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+
+        let imagePath = csvImageSlug;
+        if (!imagePath) {
+          imagePath = `images/menu/${slug}.jpg`;
+        }
+
+        const itemData = {
+          category_id: category.id,
+          category_name: category.name,
+          name: dishName,
+          description,
+          price,
+          prep_time: prepTime,
+          tags,
+          allergens,
+          slug,
+          image: imagePath,
+          is_available: true
+        };
+
+        const existingIdx = items.findIndex(item => item.name.toLowerCase() === dishName.toLowerCase());
+        if (existingIdx !== -1) {
+          items[existingIdx] = {
+            ...items[existingIdx],
+            ...itemData,
+            updated_at: Date.now()
+          };
+        } else {
+          const newItemId = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+          items.push({
+            id: newItemId,
+            ...itemData,
+            created_at: Date.now()
+          });
+        }
+        importedCount++;
+      }
+
+      await saveBulkCatalog(categories, items);
+      alert(`Import complete! Loaded ${importedCount} dishes and updated categories.`);
+    } catch (err) {
+      alert("Failed to parse CSV: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+function parseCSV(text) {
+  const lines = [];
+  let row = [""];
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i+1];
+
+    if (c === '"') {
+      if (inQuotes && next === '"') {
+        row[row.length - 1] += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (c === ',') {
+      if (inQuotes) {
+        row[row.length - 1] += c;
+      } else {
+        row.push("");
+      }
+    } else if (c === '\r' || c === '\n') {
+      if (inQuotes) {
+        row[row.length - 1] += c;
+      } else {
+        if (c === '\r' && next === '\n') {
+          i++;
+        }
+        lines.push(row);
+        row = [""];
+      }
+    } else {
+      row[row.length - 1] += c;
+    }
+  }
+  if (row.length > 1 || row[0] !== "") {
+    lines.push(row);
+  }
+  return lines;
+}
 
 window.addEventListener('DOMContentLoaded', () => {
   initAuthGuard('menu-builder', (user, restaurant) => {

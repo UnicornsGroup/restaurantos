@@ -37,9 +37,10 @@ export const subscribeTables = (callback, errorCallback) => {
 
 // Subscribe to menu categories
 export const subscribeCategories = (callback, errorCallback) => {
-  const q = collection(db, 'menu_categories');
-  return onSnapshot(q, (snapshot) => {
-    const categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const catalogRef = doc(db, 'settings', 'menu_catalog');
+  return onSnapshot(catalogRef, (docSnap) => {
+    const data = docSnap.exists() ? docSnap.data() : {};
+    const categories = data.categories || [];
     callback(categories);
   }, (err) => {
     if (errorCallback) errorCallback(err);
@@ -49,9 +50,10 @@ export const subscribeCategories = (callback, errorCallback) => {
 
 // Subscribe to menu items list
 export const subscribeItems = (callback, errorCallback) => {
-  const q = collection(db, 'menu_items');
-  return onSnapshot(q, (snapshot) => {
-    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const catalogRef = doc(db, 'settings', 'menu_catalog');
+  return onSnapshot(catalogRef, (docSnap) => {
+    const data = docSnap.exists() ? docSnap.data() : {};
+    const items = data.items || [];
     callback(items);
   }, (err) => {
     if (errorCallback) errorCallback(err);

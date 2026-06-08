@@ -91,7 +91,17 @@
             <button id="menu-cats-subtab">Categories</button>
           </div>
 
-          <div id="menu-actions-wrapper">
+          <div id="menu-actions-wrapper" style="display: flex; gap: 12px; align-items: center;">
+            <button id="export-menu-btn" class="btn btn-secondary" style="display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+              <span>Export CSV</span>
+            </button>
+            <button id="import-menu-btn" class="btn btn-secondary" style="display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="upload" style="width: 14px; height: 14px;"></i>
+              <span>Import CSV</span>
+            </button>
+            <input type="file" id="import-menu-csv" accept=".csv" style="display: none;">
+
             <button id="add-item-btn" class="btn btn-primary">
               <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
               <span>Create Dish</span>
@@ -219,6 +229,9 @@
             </button>
             <span id="item-image-filename" style="font-size: 11px; color: var(--text-muted); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 200px;">No file selected</span>
           </div>
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
+            ℹ️ <strong>Automated Image Slug:</strong> Images are referenced locally at <code>Demo/images/menu/{slug}.jpg</code>. Upload a file here to set the extension (e.g. png), and batch-upload matching photos to your local repository.
+          </p>
           <!-- Image preview container -->
           <div id="item-image-preview-container" style="display: none; margin-top: 10px; position: relative; width: 120px; height: 80px; border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; background: hsla(222, 47%, 2%, 0.5);">
             <img id="item-image-preview" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">

@@ -380,19 +380,17 @@ const initMenuMode = async () => {
     }
 
     if (!useCache) {
-      // Fetch Categories from Firestore
-      const catsSnap = await getDocs(collection(db, 'menu_categories'));
-      categories = catsSnap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => a.display_order - b.display_order);
-
-      // Fetch Available Menu Items from Firestore
-      const itemsQuery = query(
-        collection(db, 'menu_items'), 
-        where('is_available', '==', true)
-      );
-      const itemsSnap = await getDocs(itemsQuery);
-      menuItems = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Fetch single catalog document from Firestore
+      const catalogDoc = await getDoc(doc(db, 'settings', 'menu_catalog'));
+      if (catalogDoc.exists()) {
+        const catalogData = catalogDoc.data();
+        categories = (catalogData.categories || []).sort((a, b) => a.display_order - b.display_order);
+        // Only load available items for guest menu
+        menuItems = (catalogData.items || []).filter(item => item.is_available === true);
+      } else {
+        categories = [];
+        menuItems = [];
+      }
 
       // Update local cache
       localStorage.setItem('ros_menu_categories', JSON.stringify(categories));

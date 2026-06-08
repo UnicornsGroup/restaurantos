@@ -132,16 +132,63 @@ export const updateTableStatus = async (tableId, status) => {
   }
 };
 
+// Menu Catalog Helper Functions
+const getCatalog = async () => {
+  try {
+    const catalogRef = doc(db, 'settings', 'menu_catalog');
+    const docSnap = await getDoc(catalogRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return {
+        categories: data.categories || [],
+        items: data.items || []
+      };
+    }
+    return { categories: [], items: [] };
+  } catch (err) {
+    console.error("Failed to read menu catalog:", err);
+    throw err;
+  }
+};
+
+const saveCatalog = async (categories, items) => {
+  try {
+    const catalogRef = doc(db, 'settings', 'menu_catalog');
+    await setDoc(catalogRef, {
+      categories,
+      items,
+      updated_at: serverTimestamp()
+    });
+  } catch (err) {
+    console.error("Failed to write menu catalog:", err);
+    throw err;
+  }
+};
+
+export const saveBulkCatalog = async (categories, items) => {
+  try {
+    await saveCatalog(categories, items);
+    return true;
+  } catch (err) {
+    console.error("Failed to save bulk catalog:", err);
+    throw err;
+  }
+};
+
 // Menu Categories Database CRUD
 export const addMenuCategory = async (name, displayOrder, routing) => {
   try {
-    const catRef = await addDoc(collection(db, 'menu_categories'), {
+    const { categories, items } = await getCatalog();
+    const newId = 'cat_' + Date.now();
+    categories.push({
+      id: newId,
       name,
       display_order: parseInt(displayOrder) || 1,
       routing: routing || 'kitchen',
-      created_at: serverTimestamp()
+      created_at: Date.now()
     });
-    return catRef.id;
+    await saveCatalog(categories, items);
+    return newId;
   } catch (err) {
     console.error("Failed to create category:", err);
     throw err;
@@ -150,7 +197,10 @@ export const addMenuCategory = async (name, displayOrder, routing) => {
 
 export const deleteMenuCategory = async (catId) => {
   try {
-    await deleteDoc(doc(db, 'menu_categories', catId));
+    const { categories, items } = await getCatalog();
+    const updatedCategories = categories.filter(c => c.id !== catId);
+    const updatedItems = items.filter(i => i.category_id !== catId);
+    await saveCatalog(updatedCategories, updatedItems);
     return true;
   } catch (err) {
     console.error("Failed to delete category:", err);
@@ -161,16 +211,64 @@ export const deleteMenuCategory = async (catId) => {
 // Menu Items Database CRUD
 export const saveMenuItem = async (itemId, payload) => {
   try {
+    const { categories, items } = await getCatalog();
+    
+    // Generate URL safe slug
+    const slugName = payload.name
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    // Resolve relative path for image to match format: images/menu/{slug}.{ext}
+    let ext = 'jpg';
+    if (payload.imageExtension) {
+      ext = payload.imageExtension;
+    } else if (payload.image && payload.image.includes('.')) {
+      const parts = payload.image.split('.');
+      ext = parts[parts.length - 1];
+    }
+    
+    const imagePath = `images/menu/${slugName}.${ext}`;
+
+    const itemData = {
+      category_id: payload.category_id,
+      category_name: payload.category_name,
+      name: payload.name,
+      description: payload.description,
+      price: parseFloat(payload.price) || 0,
+      prep_time: parseInt(payload.prep_time) || 15,
+      tags: payload.tags || [],
+      allergens: payload.allergens || [],
+      slug: slugName,
+      image: imagePath,
+      is_available: payload.hasOwnProperty('is_available') ? payload.is_available : true
+    };
+
     if (itemId) {
-      await updateDoc(doc(db, 'menu_items', itemId), payload);
+      const idx = items.findIndex(i => i.id === itemId);
+      if (idx !== -1) {
+        const existing = items[idx];
+        items[idx] = {
+          ...existing,
+          ...itemData,
+          id: itemId,
+          updated_at: Date.now()
+        };
+      }
+      await saveCatalog(categories, items);
       return itemId;
     } else {
-      const itemRef = await addDoc(collection(db, 'menu_items'), {
-        ...payload,
+      const newId = 'item_' + Date.now();
+      items.push({
+        ...itemData,
+        id: newId,
         is_available: true,
-        created_at: serverTimestamp()
+        created_at: Date.now()
       });
-      return itemRef.id;
+      await saveCatalog(categories, items);
+      return newId;
     }
   } catch (err) {
     console.error("Failed to save menu item:", err);
@@ -180,9 +278,12 @@ export const saveMenuItem = async (itemId, payload) => {
 
 export const toggleItemAvailability = async (itemId, currentAvailability) => {
   try {
-    await updateDoc(doc(db, 'menu_items', itemId), {
-      is_available: !currentAvailability
-    });
+    const { categories, items } = await getCatalog();
+    const idx = items.findIndex(i => i.id === itemId);
+    if (idx !== -1) {
+      items[idx].is_available = !currentAvailability;
+      await saveCatalog(categories, items);
+    }
     return true;
   } catch (err) {
     console.error("Failed to toggle item availability:", err);
@@ -192,7 +293,9 @@ export const toggleItemAvailability = async (itemId, currentAvailability) => {
 
 export const deleteMenuItem = async (itemId) => {
   try {
-    await deleteDoc(doc(db, 'menu_items', itemId));
+    const { categories, items } = await getCatalog();
+    const updatedItems = items.filter(i => i.id !== itemId);
+    await saveCatalog(categories, updatedItems);
     return true;
   } catch (err) {
     console.error("Failed to delete menu item:", err);
