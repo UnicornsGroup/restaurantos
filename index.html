@@ -40,6 +40,12 @@
         <li><a href="#pricing">Pricing</a></li>
         <li><a href="#testimonials">Reviews</a></li>
         <li><a href="#faq">FAQ</a></li>
+        <li class="nav-cta-mobile-wrapper">
+          <a href="https://unicornsgroup.github.io/restaurantos/" target="_blank" class="nav-cta nav-cta-mobile">
+            Live Demo
+            <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+          </a>
+        </li>
       </ul>
 
       <a href="https://unicornsgroup.github.io/restaurantos/" target="_blank" class="nav-cta nav-cta-desktop">
@@ -593,12 +599,16 @@
       const navToggle = document.getElementById('nav-toggle');
       const navLinks = document.getElementById('nav-links');
       navToggle.addEventListener('click', () => {
+        navToggle.classList.toggle('active');
         navLinks.classList.toggle('active');
       });
 
       // Close mobile nav on link click
       navLinks.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => navLinks.classList.remove('active'));
+        link.addEventListener('click', () => {
+          navToggle.classList.remove('active');
+          navLinks.classList.remove('active');
+        });
       });
 
       // ─── Showcase tabs ───
