@@ -180,3 +180,22 @@
   }
 }
 
+@media (max-width: 480px) {
+  .pos-items-grid {
+    grid-template-cols: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+    max-height: 320px;
+  }
+  .pos-dish-card {
+    padding: 12px;
+    height: 120px;
+  }
+  .pos-dish-card h4 {
+    font-size: 12px !important;
+  }
+  .billing-section {
+    padding: 16px;
+  }
+}
+
+
