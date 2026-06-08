@@ -369,7 +369,7 @@ const initMenuMode = async () => {
     const now = Date.now();
     let useCache = false;
 
-    if (cacheTime && (now - parseInt(cacheTime) < 300000)) { // 5 minutes TTL
+    if (cacheTime && (now - parseInt(cacheTime) < 3600000)) { // 1 hour TTL
       const cachedCats = localStorage.getItem('ros_menu_categories');
       const cachedItems = localStorage.getItem('ros_menu_items');
       if (cachedCats && cachedItems) {
