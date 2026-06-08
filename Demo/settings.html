@@ -167,6 +167,18 @@
           <input type="text" id="set-rest-slug" placeholder="the-grand-bistro" readonly style="cursor: not-allowed; opacity: 0.65;">
           <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Used in QR code customer menu URLs. Automatically generated from restaurant name.</p>
         </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+          <div>
+            <h4 style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px;">Enable Live Order Tracking</h4>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4; max-width: 450px;">
+              Allow customers to see live KDS updates for their orders. Disabling this during busy rush hours or festivals saves significant database read credits.
+            </p>
+          </div>
+          <button type="button" id="toggle-tracking-btn" style="width: 48px; height: 26px; border-radius: 999px; border: none; padding: 3px; cursor: pointer; transition: all 0.2s; background: var(--primary); display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; outline: none;">
+            <span style="width: 20px; height: 20px; border-radius: 50%; background: #fff; display: block; box-shadow: 0 1px 3px rgba(0,0,0,0.4); transition: all 0.2s;"></span>
+          </button>
+        </div>
       </div>
 
       <!-- Submit CTA -->

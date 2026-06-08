@@ -6,8 +6,28 @@ import { showAlert } from './utils.js';
 let activeUser = null;
 let activeRestaurant = null;
 let currentLogoBase64 = "";
+let enableTracking = true;
 
 const initSettingsPage = async () => {
+  const toggleTrackingBtn = document.getElementById('toggle-tracking-btn');
+  const updateTrackingBtnUI = () => {
+    if (!toggleTrackingBtn) return;
+    if (enableTracking) {
+      toggleTrackingBtn.style.background = 'var(--primary)';
+      toggleTrackingBtn.style.justifyContent = 'flex-end';
+    } else {
+      toggleTrackingBtn.style.background = 'var(--text-dark)';
+      toggleTrackingBtn.style.justifyContent = 'flex-start';
+    }
+  };
+
+  if (toggleTrackingBtn) {
+    toggleTrackingBtn.addEventListener('click', () => {
+      enableTracking = !enableTracking;
+      updateTrackingBtnUI();
+    });
+  }
+
   // Load existing settings and populate the form
   try {
     const settings = await getRestaurantSettings();
@@ -35,6 +55,8 @@ const initSettingsPage = async () => {
           filenameLabel.innerText = settings.logoUrl.startsWith('data:') ? 'Stored Image (Base64)' : 'Stored Image (URL)';
         }
       }
+      enableTracking = settings.enableTracking !== false;
+      updateTrackingBtnUI();
     }
   } catch (err) {
     console.error("Could not load settings:", err);
@@ -102,7 +124,7 @@ const initSettingsPage = async () => {
       submitBtn.innerText = 'Saving...';
 
       try {
-        await saveRestaurantSettings({ name, logoUrl, description, currency, slug, gstin, stateCode });
+        await saveRestaurantSettings({ name, logoUrl, description, currency, slug, gstin, stateCode, enableTracking });
         if (alertSuccess) {
           alertSuccess.innerText = 'Business settings saved successfully!';
           alertSuccess.classList.remove('hidden');

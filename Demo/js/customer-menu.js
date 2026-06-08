@@ -154,7 +154,19 @@ const initPage = async () => {
   tableId = params.get('t');
 
   if (orderId) {
-    // Direct tracker link — skip guest check
+    // Direct tracker link — check if tracking is enabled
+    try {
+      const settingsDoc = await getDoc(doc(db, 'settings', 'restaurant'));
+      if (settingsDoc.exists()) {
+        activeSettings = settingsDoc.data();
+      }
+    } catch (_) {}
+    
+    if (activeSettings && activeSettings.enableTracking === false) {
+      showError('Live order tracking is temporarily disabled by the restaurant.');
+      return;
+    }
+    
     initTrackerMode(orderId);
     return;
   }
@@ -673,11 +685,21 @@ const handlePlaceOrder = async () => {
     menuContainer.classList.add('hidden');
     orderCompletedPanel.classList.remove('hidden');
 
-    trackOrderBtn.onclick = () => {
-      // Transition to tracker mode
-      orderCompletedPanel.classList.add('hidden');
-      initTrackerMode(newOrderId);
-    };
+    if (activeSettings && activeSettings.enableTracking === false) {
+      trackOrderBtn.innerHTML = '<span>Go Back to Menu</span><i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>';
+      if (window.lucide) window.lucide.createIcons();
+      trackOrderBtn.onclick = () => {
+        orderCompletedPanel.classList.add('hidden');
+        initMenuMode();
+      };
+    } else {
+      trackOrderBtn.innerHTML = '<span>Track Order Status</span><i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>';
+      if (window.lucide) window.lucide.createIcons();
+      trackOrderBtn.onclick = () => {
+        orderCompletedPanel.classList.add('hidden');
+        initTrackerMode(newOrderId);
+      };
+    }
 
   } catch (err) {
     console.error('Failed to submit order:', err);
