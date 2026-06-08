@@ -72,6 +72,53 @@
     .toggle-availability-btn:hover {
       opacity: 0.9;
     }
+
+    /* Mobile media queries */
+    @media (max-width: 768px) {
+      .dashboard-panel {
+        padding: 16px;
+      }
+      .menu-tabs {
+        gap: 16px;
+        width: 100%;
+        justify-content: center;
+      }
+      #menu-actions-wrapper {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      #export-menu-btn span, #import-menu-btn span {
+        display: none;
+      }
+      #export-menu-btn, #import-menu-btn {
+        padding: 10px 12px;
+      }
+      #add-item-btn, #add-category-btn {
+        flex: 1;
+        justify-content: center;
+      }
+      .menu-item-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      /* Stack actions row horizontally at bottom */
+      .menu-item-card > div:nth-child(2) {
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        border-top: 1px solid var(--border-color);
+        padding-top: 12px;
+        margin-top: 4px;
+        width: 100%;
+      }
+      .menu-item-card > div:nth-child(2) div[style*="margin-top"] {
+        margin-top: 0 !important;
+      }
+    }
   </style>
 </head>
 <body>
