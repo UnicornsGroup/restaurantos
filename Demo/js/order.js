@@ -255,11 +255,14 @@ const renderCatalog = () => {
       card.className = 'pos-dish-card animate-slide-up';
       card.dataset.id = item.id;
       
-      // Check if image exists, otherwise render a fallback icon
+      // Render the custom image if specified, otherwise render a clean dark placeholder with a utensils icon
       const imageHtml = item.image ? 
-        `<img src="${item.image}" class="pos-dish-card-image" alt="${item.name}">` :
-        `<div class="pos-dish-card-image" style="display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.15);">
-           <i data-lucide="utensils" style="width: 28px; height: 28px;"></i>
+        `<img src="${item.image}" class="pos-dish-card-image" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+         <div class="pos-dish-card-placeholder" style="display: none; align-items: center; justify-content: center;">
+           <i data-lucide="utensils" style="width: 20px; height: 20px; color: rgba(255,255,255,0.15);"></i>
+         </div>` :
+        `<div class="pos-dish-card-placeholder" style="display: flex; align-items: center; justify-content: center;">
+           <i data-lucide="utensils" style="width: 20px; height: 20px; color: rgba(255,255,255,0.15);"></i>
          </div>`;
 
       card.innerHTML = `
