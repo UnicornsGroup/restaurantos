@@ -29,6 +29,7 @@ let discountItemId = '';
 let discountAmount = 0;
 let activeCategoryFilter = 'all';
 let searchQuery = '';
+let selectedPaymentMethod = 'cash';
 
 // DOM references
 const tableSelect = document.getElementById('tables-select');
@@ -130,6 +131,15 @@ const initOrderPage = () => {
     });
   }
 
+  // Payment methods selection
+  document.querySelectorAll('.payment-method-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.payment-method-btn').forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      selectedPaymentMethod = e.currentTarget.dataset.method;
+    });
+  });
+
   // Subscriptions
   if (tablesUnsubscribe) tablesUnsubscribe();
   tablesUnsubscribe = subscribeTables((tables) => {
@@ -215,33 +225,70 @@ const renderCatalog = () => {
     return;
   }
 
+  // Group items by category_name
+  const groups = {};
   filtered.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'glass-panel pos-dish-card animate-slide-up';
-    card.innerHTML = `
-      <div>
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
-          <span style="width: 6px; height: 6px; border-radius: 50%; background: ${item.tags?.includes('Veg') ? 'var(--success)' : 'var(--danger)'}"></span>
-          <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${item.category_name}</span>
-        </div>
-        <h4 style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px;">${item.name}</h4>
-      </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 8px;">
-        <span style="font-size: 13px; font-weight: 700;">${formatPrice(item.price, activeRestaurant?.currency)}</span>
-        <button class="btn btn-primary btn-add-to-cart" style="padding: 6px 10px; font-size: 11px;" data-id="${item.id}">Add +</button>
-      </div>
-    `;
-    catalogGrid.appendChild(card);
+    const cat = item.category_name || 'General';
+    if (!groups[cat]) {
+      groups[cat] = [];
+    }
+    groups[cat].push(item);
   });
 
-  catalogGrid.querySelectorAll('.btn-add-to-cart').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const item = menuItems.find(i => i.id === btn.dataset.id);
-      if (item) {
+  // Render each category group
+  Object.keys(groups).forEach(catName => {
+    const sec = document.createElement('div');
+    sec.className = 'pos-category-section';
+    
+    // Category title
+    const title = document.createElement('h3');
+    title.className = 'pos-category-title';
+    title.innerText = catName;
+    sec.appendChild(title);
+    
+    // Items grid inside this section
+    const grid = document.createElement('div');
+    grid.className = 'pos-items-grid';
+    
+    groups[catName].forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'pos-dish-card animate-slide-up';
+      card.dataset.id = item.id;
+      
+      // Check if image exists, otherwise render a fallback icon
+      const imageHtml = item.image ? 
+        `<img src="${item.image}" class="pos-dish-card-image" alt="${item.name}">` :
+        `<div class="pos-dish-card-image" style="display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.15);">
+           <i data-lucide="utensils" style="width: 28px; height: 28px;"></i>
+         </div>`;
+
+      card.innerHTML = `
+        ${imageHtml}
+        <div class="pos-dish-card-body">
+          <div class="pos-dish-card-name">${item.name}</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+            <span class="pos-dish-card-price">${formatPrice(item.price, activeRestaurant?.currency)}</span>
+            <span style="font-size: 8px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: inline-flex; align-items: center; gap: 3px;">
+              <span style="width: 4px; height: 4px; border-radius: 50%; background: ${item.tags?.includes('Veg') ? 'var(--success)' : 'var(--danger)'}"></span>
+              ${item.tags?.includes('Veg') ? 'Veg' : 'Non-Veg'}
+            </span>
+          </div>
+        </div>
+      `;
+      
+      // Make entire card clickable
+      card.addEventListener('click', () => {
         addToCart(item);
-      }
+      });
+      
+      grid.appendChild(card);
     });
+    
+    sec.appendChild(grid);
+    catalogGrid.appendChild(sec);
   });
+
+  if (window.lucide) window.lucide.createIcons();
 };
 
 const addToCart = (item) => {
@@ -295,7 +342,7 @@ const renderCart = () => {
   const curSymbol = activeRestaurant?.currency || '₹';
 
   if (cart.length === 0) {
-    cartItemsWrapper.innerHTML = '<p class="text-xs text-slate-500 py-12 text-center">Cart is empty. Select items to add.</p>';
+    cartItemsWrapper.innerHTML = '<p class="text-xs text-slate-500 py-12 text-center" style="color: var(--text-muted); text-align: center; margin: auto 0;">Cart is empty. Select items to add.</p>';
     populateDiscountItemSelect();
     calculateCheckoutTotal();
     return;
@@ -304,6 +351,10 @@ const renderCart = () => {
   cart.forEach(item => {
     const div = document.createElement('div');
     div.className = 'cart-item-row animate-slide-up';
+    div.style.display = 'flex';
+    div.style.alignItems = 'center';
+    div.style.justifyContent = 'space-between';
+    div.style.gap = '12px';
     
     // Display item modifiers if they exist
     const modifiersHtml = item.selected_modifiers && item.selected_modifiers.length > 0 ? `
@@ -313,27 +364,46 @@ const renderCart = () => {
     ` : '';
 
     div.innerHTML = `
-      <div style="flex: 1;">
-        <h5 style="font-size: 13px; font-weight: 700; color: #fff;">${item.name}</h5>
+      <div style="flex: 1; min-width: 0;">
+        <h5 style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</h5>
         <span style="font-size: 11px; color: var(--text-muted);">${formatPrice(item.price, curSymbol)} each</span>
         ${modifiersHtml}
         ${item.special_instruction ? `<p style="font-size: 10px; color: var(--primary-hover); font-style: italic; margin-top: 2px;">Note: ${item.special_instruction}</p>` : ''}
       </div>
       <div class="cart-item-qty-selector">
-        <button class="cart-item-qty-btn btn-qty-dec" data-id="${item.item_id}">-</button>
-        <span style="font-weight: 750; color: #fff;">${item.quantity}</span>
-        <button class="cart-item-qty-btn btn-qty-inc" data-id="${item.item_id}">+</button>
+        <button type="button" class="qty-btn-circle dec" data-id="${item.item_id}">
+          <i data-lucide="minus" style="width: 12px; height: 12px;"></i>
+        </button>
+        <span style="font-weight: 750; color: #fff; font-size: 13px; min-width: 14px; text-align: center;">${item.quantity}</span>
+        <button type="button" class="qty-btn-circle inc" data-id="${item.item_id}">
+          <i data-lucide="plus" style="width: 12px; height: 12px;"></i>
+        </button>
       </div>
-      <div style="width: 80px; text-align: right; font-size: 13px; font-weight: 700; color: #fff;">
+      <button type="button" class="cart-item-delete-btn" data-id="${item.item_id}" title="Remove Item">
+        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+      </button>
+      <div style="width: 76px; text-align: right; font-size: 13px; font-weight: 700; color: #fff;">
         ${formatPrice(item.price * item.quantity, curSymbol)}
       </div>
     `;
 
-    div.querySelector('.btn-qty-dec').addEventListener('click', () => updateCartItemQuantity(item.item_id, -1));
-    div.querySelector('.btn-qty-inc').addEventListener('click', () => updateCartItemQuantity(item.item_id, 1));
+    div.querySelector('.dec').addEventListener('click', (e) => {
+      e.stopPropagation();
+      updateCartItemQuantity(item.item_id, -1);
+    });
+    div.querySelector('.inc').addEventListener('click', (e) => {
+      e.stopPropagation();
+      updateCartItemQuantity(item.item_id, 1);
+    });
+    div.querySelector('.cart-item-delete-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      updateCartItemQuantity(item.item_id, -item.quantity);
+    });
 
     cartItemsWrapper.appendChild(div);
   });
+
+  if (window.lucide) window.lucide.createIcons();
 
   populateDiscountItemSelect();
   calculateCheckoutTotal();
@@ -638,7 +708,8 @@ const handleSettleAndPrintBill = async () => {
           customer_name: customerName,
           customer_mobile: customerMobile,
           customer_gstin: customerGstin,
-          customer_company: customerCompany
+          customer_company: customerCompany,
+          paymentMethod: selectedPaymentMethod
         });
       }
       // Explicitly free the table status
@@ -680,6 +751,7 @@ const handleSettleAndPrintBill = async () => {
         discountItemId: finalDiscountItemId,
         discountAmount: finalDiscount,
         appliedBy: activeUser ? activeUser.role || 'cashier' : 'cashier',
+        paymentMethod: selectedPaymentMethod,
         created_at: new Date()
       };
       const orderId = await createCustomerOrder(payload);

@@ -62,8 +62,17 @@
             </div>
           </div>
 
+          <!-- Current Order Header Bar -->
+          <div class="billing-header-bar">
+            <span class="billing-header-title">Current Order</span>
+            <button class="billing-header-btn" type="button" id="btn-order-info">
+              <i data-lucide="info" style="width: 11px; height: 11px;"></i>
+              <span>Order Info</span>
+            </button>
+          </div>
+
           <!-- Customer / B2B Details -->
-          <div style="margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+          <div style="margin-top: 4px; border-top: 1px solid var(--border-color); padding-top: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 8px;" id="toggle-customer-details">
               <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
                 <i data-lucide="user" style="width: 12px; height: 12px;"></i>
@@ -113,13 +122,14 @@
               <span>SGST (2.5%)</span>
               <span id="checkout-sgst">₹0.00</span>
             </div>
-            <div class="discount-control-panel" style="margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; flex-direction: column; gap: 8px;">
-              <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Discounts & Offers</span>
+            
+            <div class="discount-control-panel" style="margin-top: 4px; border-top: 1px solid var(--border-color); padding-top: 8px; display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Discounts & Offers</span>
               <div class="discount-type-buttons" style="display: flex; gap: 4px;">
-                <button type="button" id="btn-discount-none" class="btn btn-secondary active" style="flex: 1; padding: 6px; font-size: 10px; height: 28px;">None</button>
-                <button type="button" id="btn-discount-flat" class="btn btn-secondary" style="flex: 1; padding: 6px; font-size: 10px; height: 28px;">Flat ₹</button>
-                <button type="button" id="btn-discount-percent" class="btn btn-secondary" style="flex: 1; padding: 6px; font-size: 10px; height: 28px;">Pct %</button>
-                <button type="button" id="btn-discount-item" class="btn btn-secondary" style="flex: 1; padding: 6px; font-size: 10px; height: 28px;">Item</button>
+                <button type="button" id="btn-discount-none" class="btn btn-secondary active" style="flex: 1; padding: 4px; font-size: 10px; height: 26px;">None</button>
+                <button type="button" id="btn-discount-flat" class="btn btn-secondary" style="flex: 1; padding: 4px; font-size: 10px; height: 26px;">Flat ₹</button>
+                <button type="button" id="btn-discount-percent" class="btn btn-secondary" style="flex: 1; padding: 4px; font-size: 10px; height: 26px;">Pct %</button>
+                <button type="button" id="btn-discount-item" class="btn btn-secondary" style="flex: 1; padding: 4px; font-size: 10px; height: 26px;">Item</button>
               </div>
               <div id="discount-inputs-container" style="display: none; align-items: center; gap: 6px; margin-top: 2px;">
                 <select id="discount-item-select" style="flex: 1.5; font-size: 11px; padding: 4px 8px; height: 32px; border-radius: 8px; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid var(--border-color);">
@@ -132,19 +142,39 @@
                 <span id="checkout-discount-applied" style="color: var(--danger); font-weight: 700;">₹0.00</span>
               </div>
             </div>
-            <div class="summary-row total">
+
+            <!-- Payment Method Selector -->
+            <div style="margin-top: 4px; border-top: 1px solid var(--border-color); padding-top: 8px; display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Payment Method</span>
+              <div class="payment-methods-grid">
+                <button type="button" class="payment-method-btn active" data-method="cash">
+                  <i data-lucide="banknote" style="width: 13px; height: 13px;"></i>
+                  <span>Cash</span>
+                </button>
+                <button type="button" class="payment-method-btn" data-method="card">
+                  <i data-lucide="credit-card" style="width: 13px; height: 13px;"></i>
+                  <span>Card</span>
+                </button>
+                <button type="button" class="payment-method-btn" data-method="upi">
+                  <i data-lucide="smartphone" style="width: 13px; height: 13px;"></i>
+                  <span>UPI / Wallet</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="summary-row total" style="border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 4px;">
               <span>Grand Total</span>
               <span id="checkout-grand-total">₹0.00</span>
             </div>
           </div>
 
           <!-- Actions triggers -->
-          <div class="billing-actions">
-            <button id="btn-send-kds" class="btn btn-secondary" style="flex: 1;">
+          <div class="billing-actions" style="margin-top: 12px;">
+            <button id="btn-send-kds" class="btn btn-secondary" style="flex: 1; height: 42px; font-size: 13px;">
               <i data-lucide="chef-hat" style="width: 16px; height: 16px;"></i>
               <span>Push KDS</span>
             </button>
-            <button id="btn-pay-print" class="btn btn-primary" style="flex: 1.2;">
+            <button id="btn-pay-print" class="btn-place-order" style="flex: 1.4; margin-top: 0; height: 42px; font-size: 13px;">
               <i data-lucide="printer" style="width: 16px; height: 16px;"></i>
               <span>Settle & Print</span>
             </button>
