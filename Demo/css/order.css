@@ -374,12 +374,6 @@
   margin-top: 16px;
 }
 
-@media (max-width: 1200px) {
-  .pos-items-grid {
-    grid-template-cols: repeat(3, 1fr);
-  }
-}
-
 @media (max-width: 900px) {
   .order-layout {
     flex-direction: column;
@@ -392,20 +386,20 @@
   }
 }
 
-@media (max-width: 768px) {
-  .pos-items-grid {
-    grid-template-cols: repeat(3, 1fr);
-  }
-}
-
 @media (max-width: 480px) {
   .pos-items-grid {
-    grid-template-cols: repeat(3, 1fr);
-    gap: 8px;
+    grid-template-cols: repeat(4, 1fr);
+    gap: 6px;
   }
   .pos-dish-card {
     aspect-ratio: 1 / 1;
     height: auto;
+  }
+  .pos-dish-card-name {
+    font-size: 9px;
+  }
+  .pos-dish-card-price {
+    font-size: 10px;
   }
   .billing-section {
     padding: 16px;
