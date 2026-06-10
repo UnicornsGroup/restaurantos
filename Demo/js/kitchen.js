@@ -7,13 +7,15 @@ let activeUser = null;
 let activeRestaurant = null;
 let activeOrdersList = [];
 let kdsTimerInterval = null;
+let kdsUnsubscribe = null;
 
 // DOM references
 const kdsGrid = document.getElementById('kds-grid');
 
 const initKitchenPage = () => {
   // Subscribe to live incoming orders
-  subscribeKdsOrders((orders) => {
+  if (kdsUnsubscribe) kdsUnsubscribe();
+  kdsUnsubscribe = subscribeKdsOrders((orders) => {
     activeOrdersList = orders.sort((a, b) => {
       const timeA = a.created_at?.toDate ? a.created_at.toDate().getTime() : 0;
       const timeB = b.created_at?.toDate ? b.created_at.toDate().getTime() : 0;
@@ -50,6 +52,11 @@ const renderKdsTickets = () => {
       <div class="kds-item-row" data-order-id="${order.id}" data-item-index="${index}">
         <div>
           <span style="color: #fff;">${i.name}</span>
+          ${i.selected_modifiers && i.selected_modifiers.length > 0 ? `
+            <div class="kds-item-modifiers" style="font-size: 10px; color: var(--text-muted); margin-top: 2px; padding-left: 6px; line-height: 1.3;">
+              ${i.selected_modifiers.map(m => `• ${m.groupName}: ${m.name}`).join('<br>')}
+            </div>
+          ` : ''}
           ${i.special_instruction ? `<p style="font-size: 10px; color: var(--primary-hover); font-style: italic; margin-top: 2px;">Note: ${i.special_instruction}</p>` : ''}
         </div>
         <span class="kds-item-qty">x${i.quantity}</span>
@@ -92,6 +99,49 @@ const renderKdsTickets = () => {
         row.classList.toggle('completed');
       });
     });
+
+    // Touch Swipe gestures (Swipe Right = Advance, Swipe Left = Revert)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    ticket.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    ticket.addEventListener('touchend', async (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const touchEndY = e.changedTouches[0].screenY;
+      
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+      
+      // Minimum distance check: 80px horizontal, less than 50px vertical deviation
+      if (Math.abs(diffX) > 80 && Math.abs(diffY) < 50) {
+        let nextStatus = null;
+        if (diffX > 0) {
+          // Swipe Right: Advance status
+          if (order.status === 'received') nextStatus = 'preparing';
+          else if (order.status === 'preparing') nextStatus = 'ready';
+          else if (order.status === 'ready') nextStatus = 'served';
+        } else {
+          // Swipe Left: Revert status
+          if (order.status === 'preparing') nextStatus = 'received';
+          else if (order.status === 'ready') nextStatus = 'preparing';
+        }
+        
+        if (nextStatus) {
+          ticket.style.transform = `translateX(${diffX > 0 ? '120px' : '-120px'})`;
+          ticket.style.opacity = '0';
+          try {
+            await updateOrderStatus(order.id, nextStatus, order.table_id || null);
+          } catch (err) {
+            ticket.style.transform = 'none';
+            ticket.style.opacity = '1';
+            console.error("Failed to update status via swipe:", err);
+          }
+        }
+      }
+    }, { passive: true });
 
     kdsGrid.appendChild(ticket);
   });
@@ -138,4 +188,9 @@ window.addEventListener('DOMContentLoaded', () => {
     activeRestaurant = restaurant;
     initKitchenPage();
   });
+});
+
+window.addEventListener('beforeunload', () => {
+  if (kdsUnsubscribe) kdsUnsubscribe();
+  if (kdsTimerInterval) clearInterval(kdsTimerInterval);
 });

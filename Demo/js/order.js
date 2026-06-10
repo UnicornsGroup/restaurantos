@@ -14,9 +14,18 @@ let categoriesList = [];
 let menuItems = [];
 let activeOrders = [];
 
+// Unsubscribe handles
+let tablesUnsubscribe = null;
+let categoriesUnsubscribe = null;
+let itemsUnsubscribe = null;
+let ordersUnsubscribe = null;
+
 // Local state
 let selectedTableId = '';
 let cart = [];
+let discountType = 'none'; // 'none', 'flat', 'percent', 'item'
+let discountValue = 0;
+let discountItemId = '';
 let discountAmount = 0;
 let activeCategoryFilter = 'all';
 let searchQuery = '';
@@ -29,9 +38,18 @@ const searchDishesInput = document.getElementById('search-dishes');
 const cartItemsWrapper = document.getElementById('cart-items-wrapper');
 
 const subtotalSpan = document.getElementById('checkout-subtotal');
-const taxSpan = document.getElementById('checkout-tax');
-const discountInput = document.getElementById('cart-discount');
+const cgstSpan = document.getElementById('checkout-cgst');
+const sgstSpan = document.getElementById('checkout-sgst');
+const discountAppliedSpan = document.getElementById('checkout-discount-applied');
 const grandTotalSpan = document.getElementById('checkout-grand-total');
+
+const btnDiscountNone = document.getElementById('btn-discount-none');
+const btnDiscountFlat = document.getElementById('btn-discount-flat');
+const btnDiscountPercent = document.getElementById('btn-discount-percent');
+const btnDiscountItem = document.getElementById('btn-discount-item');
+const discountInputsContainer = document.getElementById('discount-inputs-container');
+const discountItemSelect = document.getElementById('discount-item-select');
+const discountValueInput = document.getElementById('discount-value-input');
 
 const btnSendKds = document.getElementById('btn-send-kds');
 const btnPayPrint = document.getElementById('btn-pay-print');
@@ -48,8 +66,51 @@ const initOrderPage = () => {
     loadTableCartAndBill();
   });
 
-  if (discountInput) discountInput.addEventListener('input', (e) => {
-    discountAmount = parseFloat(e.target.value) || 0;
+  const selectDiscountType = (type) => {
+    discountType = type;
+    [btnDiscountNone, btnDiscountFlat, btnDiscountPercent, btnDiscountItem].forEach(btn => {
+      if (btn) btn.classList.remove('active');
+    });
+    if (type === 'none' && btnDiscountNone) btnDiscountNone.classList.add('active');
+    if (type === 'flat' && btnDiscountFlat) btnDiscountFlat.classList.add('active');
+    if (type === 'percent' && btnDiscountPercent) btnDiscountPercent.classList.add('active');
+    if (type === 'item' && btnDiscountItem) btnDiscountItem.classList.add('active');
+    
+    if (type === 'none') {
+      if (discountInputsContainer) discountInputsContainer.style.display = 'none';
+      discountValue = 0;
+      discountItemId = '';
+      if (discountValueInput) discountValueInput.value = '';
+    } else {
+      if (discountInputsContainer) discountInputsContainer.style.display = 'flex';
+      if (type === 'item') {
+        if (discountItemSelect) {
+          discountItemSelect.style.display = 'block';
+          populateDiscountItemSelect();
+        }
+      } else {
+        if (discountItemSelect) {
+          discountItemSelect.style.display = 'none';
+          discountItemSelect.value = '';
+        }
+        discountItemId = '';
+      }
+    }
+    calculateCheckoutTotal();
+  };
+
+  if (btnDiscountNone) btnDiscountNone.addEventListener('click', () => selectDiscountType('none'));
+  if (btnDiscountFlat) btnDiscountFlat.addEventListener('click', () => selectDiscountType('flat'));
+  if (btnDiscountPercent) btnDiscountPercent.addEventListener('click', () => selectDiscountType('percent'));
+  if (btnDiscountItem) btnDiscountItem.addEventListener('click', () => selectDiscountType('item'));
+
+  if (discountValueInput) discountValueInput.addEventListener('input', (e) => {
+    discountValue = parseFloat(e.target.value) || 0;
+    calculateCheckoutTotal();
+  });
+
+  if (discountItemSelect) discountItemSelect.addEventListener('change', (e) => {
+    discountItemId = e.target.value;
     calculateCheckoutTotal();
   });
 
@@ -70,22 +131,26 @@ const initOrderPage = () => {
   }
 
   // Subscriptions
-  subscribeTables((tables) => {
+  if (tablesUnsubscribe) tablesUnsubscribe();
+  tablesUnsubscribe = subscribeTables((tables) => {
     tablesList = tables.sort((a, b) => String(a.table_number || '').localeCompare(String(b.table_number || '')));
     populateTablesDropdown();
   });
 
-  subscribeCategories((categories) => {
+  if (categoriesUnsubscribe) categoriesUnsubscribe();
+  categoriesUnsubscribe = subscribeCategories((categories) => {
     categoriesList = categories.sort((a, b) => a.display_order - b.display_order);
     renderCategoryTabs();
   });
 
-  subscribeItems((items) => {
+  if (itemsUnsubscribe) itemsUnsubscribe();
+  itemsUnsubscribe = subscribeItems((items) => {
     menuItems = items.filter(item => item.is_available === true);
     renderCatalog();
   });
 
-  subscribeAllOrders((orders) => {
+  if (ordersUnsubscribe) ordersUnsubscribe();
+  ordersUnsubscribe = subscribeAllOrders((orders) => {
     activeOrders = orders;
     loadTableCartAndBill();
   });
@@ -206,6 +271,23 @@ const updateCartItemQuantity = (itemId, change) => {
   renderCart();
 };
 
+const populateDiscountItemSelect = () => {
+  if (!discountItemSelect) return;
+  const currentVal = discountItemSelect.value;
+  discountItemSelect.innerHTML = '<option value="">-- Choose Item --</option>';
+  cart.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.item_id;
+    opt.innerText = `${item.name} (${item.quantity}x)`;
+    discountItemSelect.appendChild(opt);
+  });
+  if (cart.some(i => i.item_id === currentVal)) {
+    discountItemSelect.value = currentVal;
+  } else {
+    discountItemId = '';
+  }
+};
+
 const renderCart = () => {
   if (!cartItemsWrapper) return;
   cartItemsWrapper.innerHTML = '';
@@ -214,6 +296,7 @@ const renderCart = () => {
 
   if (cart.length === 0) {
     cartItemsWrapper.innerHTML = '<p class="text-xs text-slate-500 py-12 text-center">Cart is empty. Select items to add.</p>';
+    populateDiscountItemSelect();
     calculateCheckoutTotal();
     return;
   }
@@ -221,10 +304,20 @@ const renderCart = () => {
   cart.forEach(item => {
     const div = document.createElement('div');
     div.className = 'cart-item-row animate-slide-up';
+    
+    // Display item modifiers if they exist
+    const modifiersHtml = item.selected_modifiers && item.selected_modifiers.length > 0 ? `
+      <div class="cart-item-modifiers" style="font-size: 10px; color: var(--text-muted); margin-top: 2px; padding-left: 6px;">
+        ${item.selected_modifiers.map(m => `• ${m.groupName}: ${m.name}`).join('<br>')}
+      </div>
+    ` : '';
+
     div.innerHTML = `
       <div style="flex: 1;">
         <h5 style="font-size: 13px; font-weight: 700; color: #fff;">${item.name}</h5>
         <span style="font-size: 11px; color: var(--text-muted);">${formatPrice(item.price, curSymbol)} each</span>
+        ${modifiersHtml}
+        ${item.special_instruction ? `<p style="font-size: 10px; color: var(--primary-hover); font-style: italic; margin-top: 2px;">Note: ${item.special_instruction}</p>` : ''}
       </div>
       <div class="cart-item-qty-selector">
         <button class="cart-item-qty-btn btn-qty-dec" data-id="${item.item_id}">-</button>
@@ -242,26 +335,61 @@ const renderCart = () => {
     cartItemsWrapper.appendChild(div);
   });
 
+  populateDiscountItemSelect();
   calculateCheckoutTotal();
 };
 
 const calculateCheckoutTotal = () => {
   const curSymbol = activeRestaurant?.currency || '₹';
   const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.05; // 5% GST
-  const grandTotal = Math.max(0, subtotal + tax - discountAmount);
+  
+  // Calculate discount based on type
+  if (discountType === 'none') {
+    discountAmount = 0;
+  } else if (discountType === 'flat') {
+    discountAmount = Math.min(subtotal, discountValue);
+  } else if (discountType === 'percent') {
+    discountAmount = Math.min(subtotal, (discountValue / 100) * subtotal);
+  } else if (discountType === 'item') {
+    const row = cart.find(i => i.item_id === discountItemId);
+    if (row) {
+      const itemSubtotal = row.price * row.quantity;
+      discountAmount = Math.min(itemSubtotal, (discountValue / 100) * itemSubtotal);
+    } else {
+      discountAmount = 0;
+    }
+  }
+
+  const taxableAmount = Math.max(0, subtotal - discountAmount);
+  const cgst = taxableAmount * 0.025; // 2.5% CGST
+  const sgst = taxableAmount * 0.025; // 2.5% SGST
+  const grandTotal = taxableAmount + cgst + sgst;
 
   if (subtotalSpan) subtotalSpan.innerText = formatPrice(subtotal, curSymbol);
-  if (taxSpan) taxSpan.innerText = formatPrice(tax, curSymbol);
+  if (cgstSpan) cgstSpan.innerText = formatPrice(cgst, curSymbol);
+  if (sgstSpan) sgstSpan.innerText = formatPrice(sgst, curSymbol);
+  if (discountAppliedSpan) discountAppliedSpan.innerText = formatPrice(discountAmount, curSymbol);
   if (grandTotalSpan) grandTotalSpan.innerText = formatPrice(grandTotal, curSymbol);
 };
 
-// Check if selected table has active orders on KDS and load them
 const loadTableCartAndBill = () => {
   if (!selectedTableId) {
     cart = [];
+    discountType = 'none';
+    discountValue = 0;
+    discountItemId = '';
     discountAmount = 0;
-    if (discountInput) discountInput.value = '';
+    
+    [btnDiscountNone, btnDiscountFlat, btnDiscountPercent, btnDiscountItem].forEach(btn => {
+      if (btn) btn.classList.remove('active');
+    });
+    if (btnDiscountNone) btnDiscountNone.classList.add('active');
+    if (discountInputsContainer) discountInputsContainer.style.display = 'none';
+    if (discountValueInput) discountValueInput.value = '';
+    if (discountItemSelect) {
+      discountItemSelect.style.display = 'none';
+      discountItemSelect.value = '';
+    }
     
     // Reset customer fields
     if (document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = '';
@@ -285,7 +413,16 @@ const loadTableCartAndBill = () => {
     matchingOrders.forEach(o => {
       if (o.items && Array.isArray(o.items)) {
         o.items.forEach(item => {
-          const existing = aggregatedItems.find(i => i.item_id === item.item_id);
+          const existing = aggregatedItems.find(i => {
+            if (i.item_id !== item.item_id) return false;
+            const aMods = i.selected_modifiers || [];
+            const bMods = item.selected_modifiers || [];
+            if (aMods.length !== bMods.length) return false;
+            const aStr = aMods.map(m => `${m.groupName}:${m.name}`).sort().join('|');
+            const bStr = bMods.map(m => `${m.groupName}:${m.name}`).sort().join('|');
+            return aStr === bStr;
+          });
+          
           if (existing) {
             existing.quantity += item.quantity;
           } else {
@@ -294,6 +431,7 @@ const loadTableCartAndBill = () => {
               name: item.name,
               price: item.price,
               quantity: item.quantity,
+              selected_modifiers: item.selected_modifiers || null,
               special_instruction: item.special_instruction || null
             });
           }
@@ -302,17 +440,43 @@ const loadTableCartAndBill = () => {
     });
 
     cart = aggregatedItems;
-    discountAmount = matchingOrders.reduce((sum, o) => sum + (o.discount || 0), 0);
-    if (discountInput) discountInput.value = discountAmount || '';
+    
+    // Restore discounts
+    const firstOrder = matchingOrders[0];
+    discountType = firstOrder.discountType || 'none';
+    discountValue = firstOrder.discountValue || 0;
+    discountItemId = firstOrder.discountItemId || '';
+    discountAmount = firstOrder.discountAmount || 0;
+
+    [btnDiscountNone, btnDiscountFlat, btnDiscountPercent, btnDiscountItem].forEach(btn => {
+      if (btn) btn.classList.remove('active');
+    });
+    if (discountType === 'none' && btnDiscountNone) btnDiscountNone.classList.add('active');
+    if (discountType === 'flat' && btnDiscountFlat) btnDiscountFlat.classList.add('active');
+    if (discountType === 'percent' && btnDiscountPercent) btnDiscountPercent.classList.add('active');
+    if (discountType === 'item' && btnDiscountItem) btnDiscountItem.classList.add('active');
+    
+    if (discountType === 'none') {
+      if (discountInputsContainer) discountInputsContainer.style.display = 'none';
+    } else {
+      if (discountInputsContainer) discountInputsContainer.style.display = 'flex';
+      if (discountType === 'item') {
+        if (discountItemSelect) {
+          discountItemSelect.style.display = 'block';
+        }
+      } else {
+        if (discountItemSelect) discountItemSelect.style.display = 'none';
+      }
+    }
+    if (discountValueInput) discountValueInput.value = discountValue || '';
 
     // Populate customer fields from the first matching order
-    const firstOrder = matchingOrders[0];
     if (document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = firstOrder.customer_name || 'Guest';
     if (document.getElementById('order-customer-mobile')) document.getElementById('order-customer-mobile').value = firstOrder.customer_mobile || '';
     if (document.getElementById('order-customer-gstin')) document.getElementById('order-customer-gstin').value = firstOrder.customer_gstin || '';
     if (document.getElementById('order-customer-company')) document.getElementById('order-customer-company').value = firstOrder.customer_company || '';
     
-    // Auto-expand fields if we have any customer info (e.g. registered customer name/mobile, or B2B details)
+    // Auto-expand fields if we have any customer info
     const detailsFields = document.getElementById('customer-details-fields');
     const chevron = document.getElementById('chevron-customer-details');
     if (detailsFields) {
@@ -322,8 +486,21 @@ const loadTableCartAndBill = () => {
     }
   } else {
     cart = [];
+    discountType = 'none';
+    discountValue = 0;
+    discountItemId = '';
     discountAmount = 0;
-    if (discountInput) discountInput.value = '';
+    
+    [btnDiscountNone, btnDiscountFlat, btnDiscountPercent, btnDiscountItem].forEach(btn => {
+      if (btn) btn.classList.remove('active');
+    });
+    if (btnDiscountNone) btnDiscountNone.classList.add('active');
+    if (discountInputsContainer) discountInputsContainer.style.display = 'none';
+    if (discountValueInput) discountValueInput.value = '';
+    if (discountItemSelect) {
+      discountItemSelect.style.display = 'none';
+      discountItemSelect.value = '';
+    }
 
     // Reset customer fields
     if (document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = '';
@@ -337,6 +514,11 @@ const loadTableCartAndBill = () => {
     if (chevron) chevron.style.transform = 'rotate(0deg)';
   }
   renderCart();
+  
+  // Explicitly restore selected item inside discount selector after select list populates
+  if (discountType === 'item' && discountItemSelect) {
+    discountItemSelect.value = discountItemId || '';
+  }
 };
 
 // Handle "Hold Order" / "Send to Kitchen" form submit
@@ -368,6 +550,11 @@ const handleSendKdsOrder = async () => {
     status: 'received',
     items: cart,
     discount: discountAmount,
+    discountType: discountType,
+    discountValue: discountValue,
+    discountItemId: discountItemId,
+    discountAmount: discountAmount,
+    appliedBy: activeUser ? activeUser.role || 'cashier' : 'cashier',
     created_at: new Date()
   };
 
@@ -376,11 +563,15 @@ const handleSendKdsOrder = async () => {
   try {
     const existingOrder = activeOrders.find(o => o.table_id === selectedTableId && ['received', 'preparing', 'ready'].includes(o.status));
     if (existingOrder) {
-      // Update existing order payload
       const { doc, updateDoc, db } = await import('./firebase-config.js');
       await updateDoc(doc(db, 'orders', existingOrder.id), {
         items: cart,
         discount: discountAmount,
+        discountType: discountType,
+        discountValue: discountValue,
+        discountItemId: discountItemId,
+        discountAmount: discountAmount,
+        appliedBy: activeUser ? activeUser.role || 'cashier' : 'cashier',
         customer_name: customerName,
         customer_mobile: customerMobile,
         customer_gstin: customerGstin,
@@ -412,6 +603,9 @@ const handleSettleAndPrintBill = async () => {
   // will clear the global 'cart' as soon as we update order statuses to 'settled'
   const itemsToPrint = [...cart];
   const finalDiscount = discountAmount;
+  const finalDiscountType = discountType;
+  const finalDiscountValue = discountValue;
+  const finalDiscountItemId = discountItemId;
 
   btnPayPrint.disabled = true;
 
@@ -435,6 +629,12 @@ const handleSettleAndPrintBill = async () => {
       for (const ord of matchingOrders) {
         await updateDoc(doc(db, 'orders', ord.id), {
           status: 'settled',
+          discount: finalDiscount,
+          discountType: finalDiscountType,
+          discountValue: finalDiscountValue,
+          discountItemId: finalDiscountItemId,
+          discountAmount: finalDiscount,
+          appliedBy: activeUser ? activeUser.role || 'cashier' : 'cashier',
           customer_name: customerName,
           customer_mobile: customerMobile,
           customer_gstin: customerGstin,
@@ -456,6 +656,11 @@ const handleSettleAndPrintBill = async () => {
         status: 'settled',
         items: itemsToPrint,
         discount: finalDiscount,
+        discountType: finalDiscountType,
+        discountValue: finalDiscountValue,
+        discountItemId: finalDiscountItemId,
+        discountAmount: finalDiscount,
+        appliedBy: activeUser ? activeUser.role || 'cashier' : 'cashier',
         created_at: firstOrder.created_at || new Date()
       };
     } else {
@@ -470,6 +675,11 @@ const handleSettleAndPrintBill = async () => {
         status: 'settled',
         items: itemsToPrint,
         discount: finalDiscount,
+        discountType: finalDiscountType,
+        discountValue: finalDiscountValue,
+        discountItemId: finalDiscountItemId,
+        discountAmount: finalDiscount,
+        appliedBy: activeUser ? activeUser.role || 'cashier' : 'cashier',
         created_at: new Date()
       };
       const orderId = await createCustomerOrder(payload);
@@ -484,8 +694,21 @@ const handleSettleAndPrintBill = async () => {
     selectedTableId = '';
     if (tableSelect) tableSelect.value = '';
     cart = [];
+    discountType = 'none';
+    discountValue = 0;
+    discountItemId = '';
     discountAmount = 0;
-    if (discountInput) discountInput.value = '';
+    
+    [btnDiscountNone, btnDiscountFlat, btnDiscountPercent, btnDiscountItem].forEach(btn => {
+      if (btn) btn.classList.remove('active');
+    });
+    if (btnDiscountNone) btnDiscountNone.classList.add('active');
+    if (discountInputsContainer) discountInputsContainer.style.display = 'none';
+    if (discountValueInput) discountValueInput.value = '';
+    if (discountItemSelect) {
+      discountItemSelect.style.display = 'none';
+      discountItemSelect.value = '';
+    }
     
     // Reset customer fields
     if (document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = '';
@@ -516,4 +739,11 @@ window.addEventListener('DOMContentLoaded', () => {
     activeRestaurant = restaurant;
     initOrderPage();
   });
+});
+
+window.addEventListener('beforeunload', () => {
+  if (tablesUnsubscribe) tablesUnsubscribe();
+  if (categoriesUnsubscribe) categoriesUnsubscribe();
+  if (itemsUnsubscribe) itemsUnsubscribe();
+  if (ordersUnsubscribe) ordersUnsubscribe();
 });

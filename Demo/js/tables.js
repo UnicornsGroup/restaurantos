@@ -8,6 +8,7 @@ import { generateTableQrUrl } from './qr-generator.js';
 let activeUser = null;
 let activeRestaurant = null;
 let tablesList = [];
+let tablesUnsubscribe = null;
 
 // DOM references
 const tableGrid = document.getElementById('table-grid');
@@ -86,7 +87,8 @@ const initTablesPage = () => {
   }
   
   // Subscribe to realtime tables list
-  subscribeTables((tables) => {
+  if (tablesUnsubscribe) tablesUnsubscribe();
+  tablesUnsubscribe = subscribeTables((tables) => {
     tablesList = tables.sort((a, b) => String(a.table_number || '').localeCompare(String(b.table_number || '')));
     renderTables();
   }, (err) => {
@@ -223,4 +225,8 @@ window.addEventListener('DOMContentLoaded', () => {
     activeRestaurant = restaurant;
     initTablesPage();
   });
+});
+
+window.addEventListener('beforeunload', () => {
+  if (tablesUnsubscribe) tablesUnsubscribe();
 });

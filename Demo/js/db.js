@@ -159,6 +159,24 @@ const saveCatalog = async (categories, items) => {
       items,
       updated_at: serverTimestamp()
     });
+
+    // Automatically update menuVersion in settings/restaurant document
+    const restaurantRef = doc(db, 'settings', 'restaurant');
+    const versionStr = Date.now().toString();
+    await setDoc(restaurantRef, {
+      menuVersion: versionStr,
+      updated_at: serverTimestamp()
+    }, { merge: true });
+
+    // Update local storage cache
+    const local = localStorage.getItem('settings_restaurant');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        parsed.menuVersion = versionStr;
+        localStorage.setItem('settings_restaurant', JSON.stringify(parsed));
+      } catch (_) {}
+    }
   } catch (err) {
     console.error("Failed to write menu catalog:", err);
     throw err;
@@ -243,7 +261,8 @@ export const saveMenuItem = async (itemId, payload) => {
       allergens: payload.allergens || [],
       slug: slugName,
       image: imagePath,
-      is_available: payload.hasOwnProperty('is_available') ? payload.is_available : true
+      is_available: payload.hasOwnProperty('is_available') ? payload.is_available : true,
+      modifierGroups: payload.modifierGroups || []
     };
 
     if (itemId) {

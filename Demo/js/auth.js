@@ -14,9 +14,9 @@ import { restaurantConfig } from './config.js';
 // Determine if the current page is a public (non-protected) route
 const isCurrentPagePublic = () => {
   const path = window.location.pathname;
-  return path.includes('index.html') ||
-         path.includes('customer-menu.html') ||
-         path.includes('setup.html') ||
+  return path.includes('/index.html') ||
+         path.includes('/customer-menu.html') ||
+         path.includes('/setup.html') ||
          path === '/' ||
          path.endsWith('/');
 };
@@ -24,9 +24,9 @@ const isCurrentPagePublic = () => {
 // Determine if the current page is a staff-protected route that needs header injection
 const isCurrentPageProtected = () => {
   const path = window.location.pathname;
-  return !path.includes('index.html') &&
-         !path.includes('customer-menu.html') &&
-         !path.includes('setup.html') &&
+  return !path.includes('/index.html') &&
+         !path.includes('/customer-menu.html') &&
+         !path.includes('/setup.html') &&
          path !== '/' &&
          !path.endsWith('/');
 };
@@ -35,6 +35,11 @@ const isCurrentPageProtected = () => {
 // activeTabId: The nav tab to highlight ('tables', 'order', 'kitchen', 'dashboard', 'menu-builder', 'table-setup')
 // onAuthSuccess: callback(user, restaurant) when auth is verified
 export const initAuthGuard = (activeTabId, onAuthSuccess) => {
+  // Check subscription plan status in background and apply blockades/banners
+  import('./plan-checker.js').then(({ checkSubscriptionPlan }) => {
+    checkSubscriptionPlan(false).catch(err => console.error("Plan check failed:", err));
+  });
+
   if (!auth) return;
 
   onAuthStateChanged(auth, async (user) => {

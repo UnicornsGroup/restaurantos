@@ -3,50 +3,88 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      return request.auth.token.role;
+    }
+    
+    function isOwner() {
+      return isAuthenticated() && getUserRole() == 'owner';
+    }
+    
+    function isManager() {
+      return isAuthenticated() && getUserRole() == 'manager';
+    }
+    
+    function isWaiter() {
+      return isAuthenticated() && getUserRole() == 'waiter';
+    }
+    
+    function isCashier() {
+      return isAuthenticated() && getUserRole() == 'cashier';
+    }
+    
+    function isStaff() {
+      return isOwner() || isManager() || isWaiter() || isCashier();
+    }
+
     // Restaurants Collection Rules
     match /restaurants/{restaurantId} {
       allow read: if true; // Publicly readable for slug verification
-      allow write: if request.auth != null; // Onboarded owners can write
+      allow write: if isOwner();
     }
 
     // Users Collection Rules
     match /users/{userId} {
-      allow read, write: if request.auth != null;
+      allow read: if isStaff();
+      allow write: if isOwner();
     }
 
     // Tables Collection Rules
     match /tables/{tableId} {
       allow read: if true; // Public table details readable by guests scanning QR
-      allow write: if true; // Allows guests to update table occupancy to occupied, and staff to write
+      allow write: if isStaff() || (request.resource.data.status == 'occupied');
     }
 
-    // Menu Categories Collection Rules
+    // Menu Catalog Rules (single document settings)
+    match /settings/menu_catalog {
+      allow read: if true;
+      allow write: if isOwner() || isManager();
+    }
+
+    // Menu Categories Collection Rules (deprecating but kept for backward compatibility)
     match /menu_categories/{catId} {
-      allow read: if true; // Public menu categories readable by guests
-      allow write: if request.auth != null; // Managed by staff
+      allow read: if true;
+      allow write: if isOwner() || isManager();
     }
 
-    // Menu Items Collection Rules
+    // Menu Items Collection Rules (deprecating but kept for backward compatibility)
     match /menu_items/{itemId} {
-      allow read: if true; // Public menu items readable by guests
-      allow write: if request.auth != null; // Managed by staff
+      allow read: if true;
+      allow write: if isOwner() || isManager();
     }
 
-    // Menu Catalog Rules (single document)
+    // Menu Catalog Rules (legacy path)
     match /menu/{menuId} {
-      allow read: if true; // Public menu details readable by guests/staff
-      allow write: if request.auth != null; // Managed by staff
+      allow read: if true;
+      allow write: if isOwner() || isManager();
     }
 
     // Orders Collection Rules
     match /orders/{orderId} {
-      allow read, write: if true; // Anyone can submit an order and listen to status changes
+      allow create: if true; // Guests can place orders
+      allow read: if true; // Guests can read for status tracking
+      allow update, delete: if isStaff(); // Managed by staff only
     }
 
-    // Settings Collection Rules
+    // Settings Collection Rules (other than menu_catalog)
     match /settings/{settingsId} {
-      allow read: if true; // Publicly readable
-      allow write: if request.auth != null; // Only authenticated staff can edit
+      allow read: if true;
+      allow write: if isOwner();
     }
 
     // Guests (Customer Profiles) Collection Rules

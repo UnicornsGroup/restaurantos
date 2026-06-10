@@ -9,7 +9,7 @@
     })();
   </script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>RestaurantOS — Menu Management</title>
   
   <!-- CSS Stylesheets -->
@@ -118,6 +118,68 @@
       .menu-item-card > div:nth-child(2) div[style*="margin-top"] {
         margin-top: 0 !important;
       }
+    }
+    
+    /* Modifiers Panel Layout Styles */
+    .modifier-group-box {
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+      background: hsla(222, 47%, 2%, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+    .modifier-group-header {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+    .modifier-group-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+    }
+    .modifier-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+    .modifier-group-options {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .modifier-group-options label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      margin: 0;
+      text-transform: none;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .modifier-group-options input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -293,8 +355,44 @@
     </div>
   </div>
 
+  <!-- Modal C: Manage Modifiers -->
+  <div id="modifiers-modal" class="modal-backdrop" style="z-index: 1050;">
+    <div class="glass-panel modal-content" style="position: relative; max-width: 550px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 24px;">
+      <button id="close-modifiers-modal" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+      </button>
+      <div>
+        <h3 style="font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 2px;">Manage Modifier Choices</h3>
+        <p id="modifiers-dish-name" style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Dish Name</p>
+      </div>
+
+      <!-- Button to add new group -->
+      <button type="button" id="add-mod-group-btn" class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px;">
+        <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+        <span>Add Modifier Group</span>
+      </button>
+
+      <!-- Container for modifier groups -->
+      <div id="modifier-groups-container" style="display: flex; flex-direction: column; gap: 16px; overflow-y: auto; max-height: 48vh; padding-right: 4px; margin: 8px 0;">
+        <!-- Dynamically populated modifier groups -->
+      </div>
+
+      <div style="margin-top: 8px; display: flex; gap: 12px; flex-shrink: 0; border-top: 1px solid var(--border-color); padding-top: 16px;">
+        <button type="button" id="save-modifiers-btn" class="btn btn-primary" style="flex: 1;">Save Modifier Configuration</button>
+        <button type="button" id="cancel-modifiers-btn" class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script type="module" src="js/menu-builder.js"></script>
 
+  <!-- FastClick for touch delay elimination -->
+  <script src="https://cdn.jsdelivr.net/npm/fastclick@1.0.6/lib/fastclick.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() { 
+      FastClick.attach(document.body); 
+    });
+  </script>
 </body>
 </html>

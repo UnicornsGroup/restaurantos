@@ -576,3 +576,76 @@ h1, h2, h3, h4, h5 {
   color: #fff !important;
 }
 
+/* Touch Target Size & Active Visual Feedback */
+button, 
+.touch-target, 
+.menu-item-card, 
+.table-card, 
+.order-card, 
+.status-btn, 
+.nav-item {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 12px 16px;
+  transition: transform 0.1s ease, background-color 0.2s ease, border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+button:active, 
+.touch-target:active, 
+.menu-item-card:active, 
+.table-card:active, 
+.order-card:active, 
+.status-btn:active, 
+.nav-item:active {
+  transform: scale(0.97) !important;
+}
+
+/* Remove hover animations that don't scale well to touch devices */
+@media (hover: none) {
+  button:hover,
+  .touch-target:hover,
+  .menu-item-card:hover,
+  .table-card:hover,
+  .order-card:hover,
+  .status-btn:hover,
+  .nav-item:hover {
+    transform: none !important;
+  }
+}
+
+/* KDS Swipe Gestures indicators styling */
+.kds-ticket {
+  user-select: none;
+  touch-action: pan-y;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+/* Media queries for Waiter mobile navbar scaling and monitor grids */
+@media (max-width: 768px) {
+  .main-header {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+  .header-nav {
+    gap: 4px;
+  }
+  .header-nav .tab-btn {
+    padding: 8px 12px;
+    font-size: 11px;
+    min-height: 40px;
+    min-width: auto;
+  }
+  .kds-grid {
+    grid-template-cols: 1fr;
+    gap: 12px;
+  }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  .kds-grid {
+    grid-template-cols: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+

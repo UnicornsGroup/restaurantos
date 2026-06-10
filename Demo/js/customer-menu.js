@@ -52,6 +52,18 @@ const instructionDishName = document.getElementById('instruction-dish-name');
 const instructionTextarea = document.getElementById('instruction-textarea');
 const saveInstructionBtn = document.getElementById('save-instruction-btn');
 
+// Modifiers Selection DOM
+const modifierModal = document.getElementById('modifier-modal');
+const closeModifierModal = document.getElementById('close-modifier-modal');
+const addModifiedToCartBtn = document.getElementById('add-modified-to-cart-btn');
+const modifierGroupsContainer = document.getElementById('modifier-groups-container');
+const modifierModalDishName = document.getElementById('modifier-modal-dish-name');
+const modifierModalDishPrice = document.getElementById('modifier-modal-dish-price');
+const modifierModalSubtotal = document.getElementById('modifier-modal-subtotal');
+const modifierSpecialInstructions = document.getElementById('modifier-special-instructions');
+
+let activeModifierItem = null;
+
 // Tracker DOM
 const trackerContainer = document.getElementById('tracker-container');
 const trackerOrderId = document.getElementById('tracker-order-id');
@@ -105,6 +117,14 @@ const statusLabels = {
 };
 
 const initPage = async () => {
+  // Check subscription plan status in background and apply blockades/banners
+  try {
+    const { checkSubscriptionPlan } = await import('./plan-checker.js');
+    await checkSubscriptionPlan(true);
+  } catch (err) {
+    console.error("Plan check failed:", err);
+  }
+
   // Initialize icons
   if (window.lucide) window.lucide.createIcons();
 
@@ -376,28 +396,82 @@ const initMenuMode = async () => {
       }
     }
 
-    // 3 & 4. Fetch Categories & Available Menu Items (with a 5-minute local cache to save reads)
-    const cacheTime = localStorage.getItem('ros_menu_cache_time');
-    const now = Date.now();
-    let useCache = false;
-
-    if (cacheTime && (now - parseInt(cacheTime) < 3600000)) { // 1 hour TTL
-      const cachedCats = localStorage.getItem('ros_menu_categories');
-      const cachedItems = localStorage.getItem('ros_menu_items');
-      if (cachedCats && cachedItems) {
-        categories = JSON.parse(cachedCats);
-        menuItems = JSON.parse(cachedItems);
-        useCache = true;
-      }
+    // 3 & 4. Load from cache or fetch with versioning
+    const cacheStr = localStorage.getItem('ros_menu_cache');
+    let cache = null;
+    if (cacheStr) {
+      try {
+        cache = JSON.parse(cacheStr);
+      } catch (_) {}
     }
 
-    if (!useCache) {
-      // Fetch single catalog document from Firestore
+    const now = Date.now();
+    const isCacheValid = cache && 
+                         cache.categories && 
+                         cache.items && 
+                         cache.cachedAt && 
+                         (now - cache.cachedAt < 3600000) && 
+                         (cache.tableNo === (tableId || ''));
+
+    if (isCacheValid) {
+      // Load instantly from cache
+      categories = cache.categories;
+      menuItems = cache.items;
+      
+      renderCategoryTabs();
+      renderMenuItems();
+      setupMenuListeners();
+      
+      // Hide loading spinner instantly
+      menuLoading.classList.add('hidden');
+      menuContainer.classList.remove('hidden');
+
+      // Fetch config & check version in the background
+      (async () => {
+        try {
+          const settingsDoc = await getDoc(doc(db, 'settings', 'restaurant'));
+          if (settingsDoc.exists()) {
+            activeSettings = settingsDoc.data();
+            
+            // Check if menu version differs
+            if (activeSettings.menuVersion !== cache.menuVersion) {
+              const catalogDoc = await getDoc(doc(db, 'settings', 'menu_catalog'));
+              if (catalogDoc.exists()) {
+                const catalogData = catalogDoc.data();
+                categories = (catalogData.categories || []).sort((a, b) => a.display_order - b.display_order);
+                menuItems = (catalogData.items || []).filter(item => item.is_available === true);
+                
+                // Update local storage cache
+                const newCache = {
+                  categories,
+                  items: menuItems,
+                  menuVersion: activeSettings.menuVersion || '',
+                  cachedAt: Date.now(),
+                  tableNo: tableId || ''
+                };
+                localStorage.setItem('ros_menu_cache', JSON.stringify(newCache));
+                
+                // Silently re-render without page reload
+                renderCategoryTabs();
+                renderMenuItems();
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Background check failed:', err);
+        }
+      })();
+    } else {
+      // Cache is stale or missing — fetch everything from Firestore
+      const settingsDoc = await getDoc(doc(db, 'settings', 'restaurant'));
+      if (settingsDoc.exists()) {
+        activeSettings = settingsDoc.data();
+      }
+      
       const catalogDoc = await getDoc(doc(db, 'settings', 'menu_catalog'));
       if (catalogDoc.exists()) {
         const catalogData = catalogDoc.data();
         categories = (catalogData.categories || []).sort((a, b) => a.display_order - b.display_order);
-        // Only load available items for guest menu
         menuItems = (catalogData.items || []).filter(item => item.is_available === true);
       } else {
         categories = [];
@@ -405,21 +479,26 @@ const initMenuMode = async () => {
       }
 
       // Update local cache
-      localStorage.setItem('ros_menu_categories', JSON.stringify(categories));
-      localStorage.setItem('ros_menu_items', JSON.stringify(menuItems));
-      localStorage.setItem('ros_menu_cache_time', now.toString());
+      const newCache = {
+        categories,
+        items: menuItems,
+        menuVersion: activeSettings.menuVersion || '',
+        cachedAt: Date.now(),
+        tableNo: tableId || ''
+      };
+      localStorage.setItem('ros_menu_cache', JSON.stringify(newCache));
+      
+      renderCategoryTabs();
+      renderMenuItems();
+      setupMenuListeners();
+
+      menuLoading.classList.add('hidden');
+      menuContainer.classList.remove('hidden');
     }
 
-    // 5. Render elements
-    renderCategoryTabs();
-    renderMenuItems();
-    setupMenuListeners();
-
-    // Toggle screen visibility
-    menuLoading.classList.add('hidden');
+    // Ensure hidden screens remain hidden
     trackerContainer.classList.add('hidden');
     orderCompletedPanel.classList.add('hidden');
-    menuContainer.classList.remove('hidden');
 
     // Refresh icons
     if (window.lucide) window.lucide.createIcons();
@@ -479,42 +558,46 @@ const renderMenuItems = () => {
   filtered.forEach(item => {
     const card = document.createElement('div');
     card.className = 'glass-panel menu-item-card animate-slide-up';
-    card.style.display = 'flex';
-    card.style.gap = '16px';
-    card.style.padding = '16px';
-    card.style.position = 'relative';
-    card.style.overflow = 'hidden';
     
     card.innerHTML = `
       ${item.image ? `
-        <img src="${item.image}" style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" alt="${item.name}">
+        <img src="${item.image}" class="menu-item-image" alt="${item.name}">
       ` : ''}
-      <div style="flex: 1; display: flex; flex-direction: column; gap: 4px; text-align: left;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${item.tags?.includes('Veg') ? 'var(--success)' : 'var(--danger)'}"></span>
-          <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">${item.category_name}</span>
+      <div class="menu-item-info">
+        <div class="menu-item-tag-row">
+          <span class="menu-item-veg-indicator ${item.tags?.includes('Veg') ? 'veg' : 'nonveg'}"></span>
+          <span class="menu-item-category-name">${item.category_name}</span>
         </div>
-        <h4 style="font-size: 16px; font-weight: 700; color: #fff; margin-top: 2px;">${item.name}</h4>
-        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-top: 2px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: ellipsis; max-width: 280px;">${item.description || ''}</p>
-        <div style="font-size: 14px; font-weight: 750; color: #fff; margin-top: 8px;">${curSymbol}${parseFloat(item.price.toString()).toFixed(2)}</div>
+        <h4 class="menu-item-name">${item.name}</h4>
+        <p class="menu-item-desc">${item.description || ''}</p>
+        <div class="menu-item-price">${curSymbol}${parseFloat(item.price.toString()).toFixed(2)}</div>
       </div>
-      <div style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; shrink-0;">
-        <button class="btn-chef-note" data-id="${item.id}" title="Add Chef Instruction" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;">
-          <i data-lucide="pencil-line" style="width: 16px; height: 16px;"></i>
-        </button>
-        <button class="btn btn-primary btn-add-cart" style="padding: 6px 14px; font-size: 12px;" data-id="${item.id}">
+      <div class="menu-item-actions">
+        ${(!item.modifierGroups || item.modifierGroups.length === 0) ? `
+          <button class="btn-chef-note" data-id="${item.id}" title="Add Chef Instruction">
+            <i data-lucide="pencil-line" style="width: 16px; height: 16px;"></i>
+          </button>
+        ` : ''}
+        <button class="btn btn-primary btn-add-cart" data-id="${item.id}">
           Add +
         </button>
       </div>
     `;
 
     card.querySelector('.btn-add-cart').addEventListener('click', () => {
-      addToCart(item);
+      if (item.modifierGroups && item.modifierGroups.length > 0) {
+        openModifierModal(item);
+      } else {
+        addToCartWithModifiers(item);
+      }
     });
 
-    card.querySelector('.btn-chef-note').addEventListener('click', () => {
-      openInstructionModal(item);
-    });
+    const noteBtn = card.querySelector('.btn-chef-note');
+    if (noteBtn) {
+      noteBtn.addEventListener('click', () => {
+        openInstructionModal(item);
+      });
+    }
 
     menuItemsList.appendChild(card);
   });
@@ -522,22 +605,42 @@ const renderMenuItems = () => {
   if (window.lucide) window.lucide.createIcons();
 };
 
-const addToCart = (item, instruction = '') => {
-  const existing = cart.find(i => i.menuItem.id === item.id);
+const addToCartWithModifiers = (item, selectedModifiers = [], instruction = '') => {
+  const existing = cart.find(i => {
+    if (i.menuItem.id !== item.id) return false;
+    if ((i.specialInstruction || '') !== (instruction || '')) return false;
+    const aMods = i.selectedModifiers || [];
+    const bMods = selectedModifiers || [];
+    if (aMods.length !== bMods.length) return false;
+    const aStr = aMods.map(m => `${m.groupName}:${m.name}`).sort().join('|');
+    const bStr = bMods.map(m => `${m.groupName}:${m.name}`).sort().join('|');
+    return aStr === bStr;
+  });
+
   if (existing) {
     existing.quantity += 1;
   } else {
-    cart.push({ menuItem: item, quantity: 1, specialInstruction: instruction });
+    cart.push({
+      cartId: 'cart_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      menuItem: item,
+      quantity: 1,
+      selectedModifiers: selectedModifiers,
+      specialInstruction: instruction
+    });
   }
   updateCartUI();
 };
 
-const updateQuantity = (itemId, amount) => {
-  const item = cart.find(i => i.menuItem.id === itemId);
+const addToCart = (item, instruction = '') => {
+  addToCartWithModifiers(item, [], instruction);
+};
+
+const updateQuantity = (cartId, amount) => {
+  const item = cart.find(i => i.cartId === cartId);
   if (item) {
     item.quantity += amount;
     if (item.quantity <= 0) {
-      cart = cart.filter(i => i.menuItem.id !== itemId);
+      cart = cart.filter(i => i.cartId !== cartId);
     }
   }
   updateCartUI();
@@ -545,7 +648,10 @@ const updateQuantity = (itemId, amount) => {
 
 const updateCartUI = () => {
   const count = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const total = cart.reduce((acc, item) => acc + (item.menuItem.price * item.quantity), 0);
+  const total = cart.reduce((acc, item) => {
+    const modSum = (item.selectedModifiers || []).reduce((sum, m) => sum + m.price, 0);
+    return acc + ((item.menuItem.price + modSum) * item.quantity);
+  }, 0);
   const curSymbol = activeSettings.currency || '₹';
 
   if (count > 0) {
@@ -562,32 +668,36 @@ const updateCartUI = () => {
     
     cart.forEach(item => {
       const el = document.createElement('div');
-      el.className = 'glass-panel';
-      el.style.padding = '14px';
-      el.style.display = 'flex';
-      el.style.flexDirection = 'column';
-      el.style.gap = '8px';
+      el.className = 'glass-panel cart-item-row';
+      const modSum = (item.selectedModifiers || []).reduce((sum, m) => sum + m.price, 0);
+      const itemPriceEach = item.menuItem.price + modSum;
+
       el.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; text-align: left;">
-          <div>
-            <h4 style="font-size: 14px; font-weight: 700; color: #fff;">${item.menuItem.name}</h4>
-            <span style="font-size: 11px; color: var(--text-muted);">${curSymbol}${item.menuItem.price} each</span>
+        <div class="cart-item-row-top">
+          <div class="cart-item-info">
+            <h4 class="cart-item-name">${item.menuItem.name}</h4>
+            <span class="cart-item-price-each">${curSymbol}${itemPriceEach.toFixed(2)} each</span>
+            ${item.selectedModifiers && item.selectedModifiers.length > 0 ? `
+              <div class="cart-item-modifiers" style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
+                ${item.selectedModifiers.map(m => `<span>• ${m.groupName}: ${m.name} (+${curSymbol}${m.price})</span>`).join('')}
+              </div>
+            ` : ''}
           </div>
-          <div style="display: flex; align-items: center; gap: 12px; background: hsla(222, 47%, 2%, 0.8); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 13px;">
-            <button class="btn-qty-minus font-bold text-slate-400 hover:text-slate-200" data-id="${item.menuItem.id}" style="background: transparent; border: none; cursor: pointer;">-</button>
-            <span style="font-weight: 700; color: #fff;">${item.quantity}</span>
-            <button class="btn-qty-plus font-bold text-slate-400 hover:text-slate-200" data-id="${item.menuItem.id}" style="background: transparent; border: none; cursor: pointer;">+</button>
+          <div class="cart-item-qty-selector">
+            <button class="btn-qty-minus font-bold text-slate-400 hover:text-slate-200" data-cart-id="${item.cartId}">-</button>
+            <span class="cart-item-qty-value">${item.quantity}</span>
+            <button class="btn-qty-plus font-bold text-slate-400 hover:text-slate-200" data-cart-id="${item.cartId}">+</button>
           </div>
         </div>
         ${item.specialInstruction ? `
-          <div style="background: hsla(262, 83%, 18%, 0.15); border: 1px solid hsla(262, 83%, 38%, 0.2); padding: 6px 10px; border-radius: 6px; font-size: 11px; color: var(--primary-hover); font-style: italic; text-align: left;">
+          <div class="cart-item-instruction-badge">
             Note: ${item.specialInstruction}
           </div>
         ` : ''}
       `;
       
-      el.querySelector('.btn-qty-minus').addEventListener('click', () => updateQuantity(item.menuItem.id, -1));
-      el.querySelector('.btn-qty-plus').addEventListener('click', () => updateQuantity(item.menuItem.id, 1));
+      el.querySelector('.btn-qty-minus').addEventListener('click', () => updateQuantity(item.cartId, -1));
+      el.querySelector('.btn-qty-plus').addEventListener('click', () => updateQuantity(item.cartId, 1));
       
       cartItemsContainer.appendChild(el);
     });
@@ -637,6 +747,124 @@ const handleSaveInstruction = () => {
   instructionTextarea.value = '';
 };
 
+const openModifierModal = (item) => {
+  activeModifierItem = item;
+  modifierModalDishName.innerText = item.name;
+  const curSymbol = activeSettings.currency || '₹';
+  modifierModalDishPrice.innerText = `Base: ${curSymbol}${parseFloat(item.price.toString()).toFixed(2)}`;
+  modifierSpecialInstructions.value = '';
+  
+  // Render modifier groups
+  renderModifierGroupsForSelection();
+  
+  modifierModal.classList.add('active');
+};
+
+const renderModifierGroupsForSelection = () => {
+  modifierGroupsContainer.innerHTML = '';
+  const curSymbol = activeSettings.currency || '₹';
+  const groups = activeModifierItem.modifierGroups || [];
+  
+  groups.forEach((group, groupIdx) => {
+    const box = document.createElement('div');
+    box.className = 'modifier-group-box';
+    
+    // Group Header
+    const isRequired = group.required;
+    const isMulti = group.multiSelect;
+    
+    box.innerHTML = `
+      <div class="modifier-group-title-row">
+        <span class="modifier-group-name">${group.groupName}</span>
+        <span class="modifier-group-badge ${isRequired ? 'required' : 'optional'}">
+          ${isRequired ? 'Required' : 'Optional'}
+        </span>
+      </div>
+      <div class="modifier-options-list">
+        ${(group.modifiers || []).map((mod, modIdx) => {
+          const type = isMulti ? 'checkbox' : 'radio';
+          const inputName = `mod_group_${groupIdx}`;
+          const label = mod.name;
+          const priceOffset = mod.price > 0 ? ` (+${curSymbol}${mod.price})` : (mod.price < 0 ? ` (-${curSymbol}${Math.abs(mod.price)})` : '');
+          
+          return `
+            <label class="modifier-option-item">
+              <div class="modifier-option-label-wrapper">
+                <input type="${type}" name="${inputName}" data-group-idx="${groupIdx}" data-mod-idx="${modIdx}" class="modifier-input">
+                <span>${label}</span>
+              </div>
+              <span class="modifier-option-price">${priceOffset}</span>
+            </label>
+          `;
+        }).join('')}
+      </div>
+    `;
+    
+    // Bind change listener to each input
+    box.querySelectorAll('.modifier-input').forEach(input => {
+      input.addEventListener('change', () => {
+        recalculateModifierSubtotal();
+      });
+    });
+    
+    modifierGroupsContainer.appendChild(box);
+  });
+  
+  recalculateModifierSubtotal();
+};
+
+const recalculateModifierSubtotal = () => {
+  if (!activeModifierItem) return;
+  const curSymbol = activeSettings.currency || '₹';
+  let total = parseFloat(activeModifierItem.price.toString());
+  
+  const inputs = modifierGroupsContainer.querySelectorAll('.modifier-input:checked');
+  inputs.forEach(input => {
+    const gIdx = parseInt(input.dataset.groupIdx);
+    const mIdx = parseInt(input.dataset.modIdx);
+    const mod = activeModifierItem.modifierGroups[gIdx].modifiers[mIdx];
+    total += parseFloat(mod.price || 0);
+  });
+  
+  modifierModalSubtotal.innerText = `${curSymbol}${total.toFixed(2)}`;
+};
+
+const handleAddModifiedToCart = () => {
+  if (!activeModifierItem) return;
+  
+  // Validation
+  const groups = activeModifierItem.modifierGroups || [];
+  const selectedModifiers = [];
+  
+  for (let gIdx = 0; gIdx < groups.length; gIdx++) {
+    const group = groups[gIdx];
+    const isRequired = group.required;
+    
+    const checkedInputs = modifierGroupsContainer.querySelectorAll(`.modifier-input[data-group-idx="${gIdx}"]:checked`);
+    if (isRequired && checkedInputs.length === 0) {
+      alert(`Please make a selection in "${group.groupName}".`);
+      return;
+    }
+    
+    checkedInputs.forEach(input => {
+      const mIdx = parseInt(input.dataset.modIdx);
+      const mod = group.modifiers[mIdx];
+      selectedModifiers.push({
+        groupName: group.groupName,
+        name: mod.name,
+        price: parseFloat(mod.price || 0)
+      });
+    });
+  }
+  
+  const instruction = modifierSpecialInstructions.value.trim();
+  addToCartWithModifiers(activeModifierItem, selectedModifiers, instruction);
+  
+  // Close modal
+  modifierModal.classList.remove('active');
+  activeModifierItem = null;
+};
+
 // Place Order
 const resetPlaceOrderBtn = () => {
   if (!placeOrderBtn) return;
@@ -662,7 +890,8 @@ const handlePlaceOrder = async () => {
         item_id: i.menuItem.id,
         name: i.menuItem.name,
         quantity: i.quantity,
-        price: i.menuItem.price,
+        price: i.menuItem.price + (i.selectedModifiers || []).reduce((sum, m) => sum + m.price, 0),
+        selected_modifiers: i.selectedModifiers || null,
         special_instruction: i.specialInstruction || null
       })),
       created_at: new Date()
@@ -759,6 +988,16 @@ const setupMenuListeners = () => {
     });
   }
   if (saveInstructionBtn) saveInstructionBtn.addEventListener('click', handleSaveInstruction);
+
+  if (closeModifierModal) {
+    closeModifierModal.addEventListener('click', () => {
+      modifierModal.classList.remove('active');
+      activeModifierItem = null;
+    });
+  }
+  if (addModifiedToCartBtn) {
+    addModifiedToCartBtn.addEventListener('click', handleAddModifiedToCart);
+  }
 };
 
 
@@ -835,6 +1074,11 @@ const renderTrackerItems = (items) => {
     el.innerHTML = `
       <div style="text-align: left;">
         <h5 style="font-size: 14px; font-weight: 600; color: #fff;">${item.name}</h5>
+        ${item.selected_modifiers && item.selected_modifiers.length > 0 ? `
+          <div class="tracker-item-modifiers" style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
+            ${item.selected_modifiers.map(m => `<span>• ${m.groupName}: ${m.name}</span>`).join('')}
+          </div>
+        ` : ''}
         ${item.special_instruction ? `<p style="font-size: 10px; color: var(--primary-hover); font-style: italic; margin-top: 2px;">Note: ${item.special_instruction}</p>` : ''}
       </div>
       <span class="badge" style="background: hsla(222, 47%, 2%, 0.8); color: var(--text-muted); border-color: var(--border-color); font-size: 12px; font-weight: 700; border-radius: 8px;">

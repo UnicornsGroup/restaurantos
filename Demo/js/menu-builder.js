@@ -11,6 +11,8 @@ let categoriesCache = [];
 let menuItemsList = [];
 let editingItemId = null;
 let currentBase64Image = "";
+let modifierEditingItemId = null;
+let editingModifierGroups = [];
 
 // DOM references
 const itemImageFile = document.getElementById('item-image-file');
@@ -146,6 +148,25 @@ const initMenuBuilder = () => {
     menuItemsList = items.sort((a, b) => a.name.localeCompare(b.name));
     renderMenuItemsGrid();
   });
+
+  // Modifiers Modal Event Listeners
+  const closeModifiersModal = document.getElementById('close-modifiers-modal');
+  const cancelModifiersBtn = document.getElementById('cancel-modifiers-btn');
+  const addModGroupBtn = document.getElementById('add-mod-group-btn');
+  const saveModifiersBtn = document.getElementById('save-modifiers-btn');
+
+  if (closeModifiersModal) {
+    closeModifiersModal.addEventListener('click', () => toggleModal(document.getElementById('modifiers-modal'), false));
+  }
+  if (cancelModifiersBtn) {
+    cancelModifiersBtn.addEventListener('click', () => toggleModal(document.getElementById('modifiers-modal'), false));
+  }
+  if (addModGroupBtn) {
+    addModGroupBtn.addEventListener('click', handleAddModifierGroup);
+  }
+  if (saveModifiersBtn) {
+    saveModifiersBtn.addEventListener('click', handleSaveModifiersSubmit);
+  }
 };
 
 const renderCategoriesTable = () => {
@@ -236,12 +257,18 @@ const renderMenuItemsGrid = () => {
           </div>
         </div>
       </div>
-      <div style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; shrink-0;">
-        <button class="btn btn-secondary btn-edit-item" style="padding: 6px 10px;" data-id="${item.id}">
-          <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
-        </button>
+      <div style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; shrink-0; gap: 8px;">
+        <div style="display: flex; gap: 6px;">
+          <button class="btn btn-secondary btn-edit-modifiers" style="padding: 6px 10px; font-size: 11px; display: flex; align-items: center; gap: 4px;" data-id="${item.id}" title="Manage Modifiers">
+            <i data-lucide="sliders" style="width: 13px; height: 13px;"></i>
+            <span style="font-size: 10px; font-weight: 700;">Mods</span>
+          </button>
+          <button class="btn btn-secondary btn-edit-item" style="padding: 6px 10px;" data-id="${item.id}">
+            <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+          </button>
+        </div>
         
-        <div style="display: flex; align-items: center; gap: 6px; margin-top: 16px;">
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 12px;">
           <span style="font-size: 11px; color: var(--text-muted);">Available:</span>
           <button class="toggle-availability-btn" data-id="${item.id}" data-status="${item.is_available}" style="width: 38px; height: 22px; border-radius: 999px; border: none; padding: 2px; cursor: pointer; transition: all 0.2s; background: ${item.is_available ? 'var(--primary)' : 'var(--text-dark)'}; display: flex; align-items: center; justify-content: ${item.is_available ? 'flex-end' : 'flex-start'};">
             <span style="width: 18px; height: 18px; border-radius: 50%; background: #fff; display: block; box-shadow: 0 1px 3px rgba(0,0,0,0.4);"></span>
@@ -297,6 +324,15 @@ const renderMenuItemsGrid = () => {
     });
   });
 
+  itemsGrid.querySelectorAll('.btn-edit-modifiers').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = menuItemsList.find(i => i.id === btn.dataset.id);
+      if (item) {
+        openModifiersModal(item);
+      }
+    });
+  });
+
   if (window.lucide) window.lucide.createIcons();
 };
 
@@ -340,7 +376,8 @@ const handleSaveItemSubmit = async (e) => {
     tags,
     allergens,
     image: existingItem ? existingItem.image : '',
-    imageExtension: itemForm.dataset.imageExtension || ''
+    imageExtension: itemForm.dataset.imageExtension || '',
+    modifierGroups: existingItem ? (existingItem.modifierGroups || []) : []
   };
 
   try {
@@ -551,6 +588,288 @@ function parseCSV(text) {
   }
   return lines;
 }
+
+const openModifiersModal = (item) => {
+  modifierEditingItemId = item.id;
+  document.getElementById('modifiers-dish-name').innerText = item.name;
+  
+  // Deep clone modifierGroups
+  editingModifierGroups = JSON.parse(JSON.stringify(item.modifierGroups || []));
+  
+  // Render groups
+  renderModifierGroupsUI();
+  
+  toggleModal(document.getElementById('modifiers-modal'), true);
+};
+
+const renderModifierGroupsUI = () => {
+  const container = document.getElementById('modifier-groups-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (editingModifierGroups.length === 0) {
+    container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 24px 0;">No modifier groups created. Click Add Modifier Group to begin.</p>';
+    return;
+  }
+
+  editingModifierGroups.forEach((group, groupIdx) => {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'modifier-group-box';
+    
+    groupEl.innerHTML = `
+      <div class="modifier-group-header">
+        <input type="text" class="group-name-input" placeholder="e.g. Size, Crust, Extras" value="${group.groupName || ''}" data-idx="${groupIdx}" style="flex: 1; max-width: 180px; padding: 8px 12px; font-size: 13px;">
+        
+        <div class="modifier-group-options">
+          <label>
+            <input type="checkbox" class="group-required-checkbox" data-idx="${groupIdx}" ${group.required ? 'checked' : ''}>
+            <span>Required</span>
+          </label>
+          <label>
+            <input type="checkbox" class="group-multiselect-checkbox" data-idx="${groupIdx}" ${group.multiSelect ? 'checked' : ''}>
+            <span>Multi-select</span>
+          </label>
+        </div>
+
+        <div class="modifier-group-controls">
+          <button type="button" class="btn btn-secondary btn-icon move-group-up" data-idx="${groupIdx}" title="Move Up">
+            <i data-lucide="arrow-up" style="width: 14px; height: 14px;"></i>
+          </button>
+          <button type="button" class="btn btn-secondary btn-icon move-group-down" data-idx="${groupIdx}" title="Move Down">
+            <i data-lucide="arrow-down" style="width: 14px; height: 14px;"></i>
+          </button>
+          <button type="button" class="btn btn-danger btn-icon delete-group" data-idx="${groupIdx}" title="Delete Group">
+            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="modifiers-list-container" style="display: flex; flex-direction: column; gap: 8px;" data-group-idx="${groupIdx}">
+        <!-- List of modifier choices in group -->
+      </div>
+
+      <button type="button" class="btn btn-secondary add-modifier-choice-btn" data-idx="${groupIdx}" style="align-self: flex-start; padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+        <i data-lucide="plus" style="width: 12px; height: 12px;"></i>
+        <span>Add Choice</span>
+      </button>
+    `;
+
+    // Populate inner modifier choices
+    const listContainer = groupEl.querySelector('.modifiers-list-container');
+    const modifiers = group.modifiers || [];
+    
+    if (modifiers.length === 0) {
+      listContainer.innerHTML = '<p style="color: var(--text-muted); font-size: 11px; font-style: italic; padding-left: 4px;">No choices added yet.</p>';
+    } else {
+      modifiers.forEach((mod, modIdx) => {
+        const modRow = document.createElement('div');
+        modRow.className = 'modifier-row';
+        modRow.innerHTML = `
+          <input type="text" class="mod-name-input" placeholder="e.g. Medium, Cheese" value="${mod.name || ''}" data-group-idx="${groupIdx}" data-mod-idx="${modIdx}" style="padding: 6px 10px; font-size: 12px;">
+          <input type="number" class="mod-price-input" placeholder="Price offset (₹)" value="${mod.price !== undefined ? mod.price : 0}" data-group-idx="${groupIdx}" data-mod-idx="${modIdx}" style="padding: 6px 10px; font-size: 12px;" step="1">
+          
+          <button type="button" class="btn btn-secondary btn-icon move-mod-up" data-group-idx="${groupIdx}" data-mod-idx="${modIdx}" title="Move Up">
+            <i data-lucide="arrow-up" style="width: 12px; height: 12px;"></i>
+          </button>
+          <button type="button" class="btn btn-secondary btn-icon move-mod-down" data-group-idx="${groupIdx}" data-mod-idx="${modIdx}" title="Move Down">
+            <i data-lucide="arrow-down" style="width: 12px; height: 12px;"></i>
+          </button>
+          <button type="button" class="btn btn-danger btn-icon delete-mod" data-group-idx="${groupIdx}" data-mod-idx="${modIdx}" title="Delete Choice">
+            <i data-lucide="x" style="width: 12px; height: 12px;"></i>
+          </button>
+        `;
+        listContainer.appendChild(modRow);
+      });
+    }
+
+    container.appendChild(groupEl);
+  });
+
+  // Bind change events to sync input data back to array
+  container.querySelectorAll('.group-name-input').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const idx = parseInt(e.target.dataset.idx);
+      editingModifierGroups[idx].groupName = e.target.value;
+    });
+  });
+
+  container.querySelectorAll('.group-required-checkbox').forEach(chk => {
+    chk.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.dataset.idx);
+      editingModifierGroups[idx].required = e.target.checked;
+    });
+  });
+
+  container.querySelectorAll('.group-multiselect-checkbox').forEach(chk => {
+    chk.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.dataset.idx);
+      editingModifierGroups[idx].multiSelect = e.target.checked;
+    });
+  });
+
+  container.querySelectorAll('.mod-name-input').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const gIdx = parseInt(e.target.dataset.groupIdx);
+      const mIdx = parseInt(e.target.dataset.modIdx);
+      editingModifierGroups[gIdx].modifiers[mIdx].name = e.target.value;
+    });
+  });
+
+  container.querySelectorAll('.mod-price-input').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const gIdx = parseInt(e.target.dataset.groupIdx);
+      const mIdx = parseInt(e.target.dataset.modIdx);
+      editingModifierGroups[gIdx].modifiers[mIdx].price = parseFloat(e.target.value) || 0;
+    });
+  });
+
+  // Bind buttons click events
+  // Add modifier choice
+  container.querySelectorAll('.add-modifier-choice-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const gIdx = parseInt(btn.dataset.idx);
+      if (!editingModifierGroups[gIdx].modifiers) {
+        editingModifierGroups[gIdx].modifiers = [];
+      }
+      editingModifierGroups[gIdx].modifiers.push({
+        id: 'mod_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        name: '',
+        price: 0
+      });
+      renderModifierGroupsUI();
+    });
+  });
+
+  // Reordering groups
+  container.querySelectorAll('.move-group-up').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      if (idx > 0) {
+        const temp = editingModifierGroups[idx];
+        editingModifierGroups[idx] = editingModifierGroups[idx - 1];
+        editingModifierGroups[idx - 1] = temp;
+        renderModifierGroupsUI();
+      }
+    });
+  });
+  container.querySelectorAll('.move-group-down').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      if (idx < editingModifierGroups.length - 1) {
+        const temp = editingModifierGroups[idx];
+        editingModifierGroups[idx] = editingModifierGroups[idx + 1];
+        editingModifierGroups[idx + 1] = temp;
+        renderModifierGroupsUI();
+      }
+    });
+  });
+
+  // Deleting groups
+  container.querySelectorAll('.delete-group').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      editingModifierGroups.splice(idx, 1);
+      renderModifierGroupsUI();
+    });
+  });
+
+  // Reordering modifiers in a group
+  container.querySelectorAll('.move-mod-up').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const gIdx = parseInt(btn.dataset.groupIdx);
+      const mIdx = parseInt(btn.dataset.modIdx);
+      if (mIdx > 0) {
+        const mods = editingModifierGroups[gIdx].modifiers;
+        const temp = mods[mIdx];
+        mods[mIdx] = mods[mIdx - 1];
+        mods[mIdx - 1] = temp;
+        renderModifierGroupsUI();
+      }
+    });
+  });
+  container.querySelectorAll('.move-mod-down').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const gIdx = parseInt(btn.dataset.groupIdx);
+      const mIdx = parseInt(btn.dataset.modIdx);
+      const mods = editingModifierGroups[gIdx].modifiers;
+      if (mIdx < mods.length - 1) {
+        const temp = mods[mIdx];
+        mods[mIdx] = mods[mIdx + 1];
+        mods[mIdx + 1] = temp;
+        renderModifierGroupsUI();
+      }
+    });
+  });
+
+  // Deleting modifiers in a group
+  container.querySelectorAll('.delete-mod').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const gIdx = parseInt(btn.dataset.groupIdx);
+      const mIdx = parseInt(btn.dataset.modIdx);
+      editingModifierGroups[gIdx].modifiers.splice(mIdx, 1);
+      renderModifierGroupsUI();
+    });
+  });
+
+  if (window.lucide) window.lucide.createIcons();
+};
+
+const handleAddModifierGroup = () => {
+  editingModifierGroups.push({
+    groupId: 'grp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    groupName: '',
+    required: false,
+    multiSelect: false,
+    modifiers: []
+  });
+  renderModifierGroupsUI();
+};
+
+const handleSaveModifiersSubmit = async () => {
+  // Validate structure
+  for (let i = 0; i < editingModifierGroups.length; i++) {
+    const group = editingModifierGroups[i];
+    if (!group.groupName || group.groupName.trim() === '') {
+      alert(`Modifier group #${i + 1} is missing a name.`);
+      return;
+    }
+    const modifiers = group.modifiers || [];
+    if (modifiers.length === 0) {
+      alert(`Modifier group "${group.groupName}" must have at least one choice.`);
+      return;
+    }
+    for (let j = 0; j < modifiers.length; j++) {
+      if (!modifiers[j].name || modifiers[j].name.trim() === '') {
+        alert(`Option #${j + 1} inside group "${group.groupName}" is missing a name.`);
+        return;
+      }
+    }
+  }
+
+  try {
+    toggleModal(document.getElementById('modifiers-modal'), false);
+    const existingItem = menuItemsList.find(item => item.id === modifierEditingItemId);
+    if (existingItem) {
+      const payload = {
+        category_id: existingItem.category_id,
+        category_name: existingItem.category_name,
+        name: existingItem.name,
+        description: existingItem.description || '',
+        price: existingItem.price,
+        prep_time: existingItem.prep_time || 15,
+        tags: existingItem.tags || [],
+        allergens: existingItem.allergens || [],
+        image: existingItem.image || '',
+        is_available: existingItem.is_available,
+        modifierGroups: editingModifierGroups
+      };
+      await saveMenuItem(modifierEditingItemId, payload);
+      showAlert("Modifier configuration saved successfully.");
+    }
+  } catch (err) {
+    alert("Failed to save modifiers: " + err.message);
+  }
+};
 
 window.addEventListener('DOMContentLoaded', () => {
   initAuthGuard('menu-builder', (user, restaurant) => {
