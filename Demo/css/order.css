@@ -90,7 +90,7 @@
 
 .pos-items-grid {
   display: grid;
-  grid-template-cols: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
 
@@ -388,7 +388,7 @@
 
 @media (max-width: 480px) {
   .pos-items-grid {
-    grid-template-cols: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 6px;
   }
   .pos-dish-card {

@@ -1,7 +1,7 @@
 /* Kitchen Display System layout */
 .kds-grid {
   display: grid;
-  grid-template-cols: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
 }
 

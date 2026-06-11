@@ -225,70 +225,41 @@ const renderCatalog = () => {
     return;
   }
 
-  // Group items by category_name
-  const groups = {};
   filtered.forEach(item => {
-    const cat = item.category_name || 'General';
-    if (!groups[cat]) {
-      groups[cat] = [];
-    }
-    groups[cat].push(item);
-  });
+    const card = document.createElement('div');
+    card.className = 'pos-dish-card animate-slide-up';
+    card.dataset.id = item.id;
+    
+    // Render the custom image if specified, otherwise render a clean dark placeholder with a utensils icon
+    const imageHtml = item.image ? 
+      `<img src="${item.image}" class="pos-dish-card-image" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+       <div class="pos-dish-card-placeholder" style="display: none; align-items: center; justify-content: center;">
+         <i data-lucide="utensils" style="width: 20px; height: 20px; color: rgba(255,255,255,0.15);"></i>
+       </div>` :
+      `<div class="pos-dish-card-placeholder" style="display: flex; align-items: center; justify-content: center;">
+         <i data-lucide="utensils" style="width: 20px; height: 20px; color: rgba(255,255,255,0.15);"></i>
+       </div>`;
 
-  // Render each category group
-  Object.keys(groups).forEach(catName => {
-    const sec = document.createElement('div');
-    sec.className = 'pos-category-section';
-    
-    // Category title
-    const title = document.createElement('h3');
-    title.className = 'pos-category-title';
-    title.innerText = catName;
-    sec.appendChild(title);
-    
-    // Items grid inside this section
-    const grid = document.createElement('div');
-    grid.className = 'pos-items-grid';
-    
-    groups[catName].forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'pos-dish-card animate-slide-up';
-      card.dataset.id = item.id;
-      
-      // Render the custom image if specified, otherwise render a clean dark placeholder with a utensils icon
-      const imageHtml = item.image ? 
-        `<img src="${item.image}" class="pos-dish-card-image" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-         <div class="pos-dish-card-placeholder" style="display: none; align-items: center; justify-content: center;">
-           <i data-lucide="utensils" style="width: 20px; height: 20px; color: rgba(255,255,255,0.15);"></i>
-         </div>` :
-        `<div class="pos-dish-card-placeholder" style="display: flex; align-items: center; justify-content: center;">
-           <i data-lucide="utensils" style="width: 20px; height: 20px; color: rgba(255,255,255,0.15);"></i>
-         </div>`;
-
-      card.innerHTML = `
-        ${imageHtml}
-        <div class="pos-dish-card-body">
-          <div class="pos-dish-card-name">${item.name}</div>
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-            <span class="pos-dish-card-price">${formatPrice(item.price, activeRestaurant?.currency)}</span>
-            <span style="font-size: 8px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: inline-flex; align-items: center; gap: 3px;">
-              <span style="width: 4px; height: 4px; border-radius: 50%; background: ${item.tags?.includes('Veg') ? 'var(--success)' : 'var(--danger)'}"></span>
-              ${item.tags?.includes('Veg') ? 'Veg' : 'Non-Veg'}
-            </span>
-          </div>
+    card.innerHTML = `
+      ${imageHtml}
+      <div class="pos-dish-card-body">
+        <div class="pos-dish-card-name">${item.name}</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+          <span class="pos-dish-card-price">${formatPrice(item.price, activeRestaurant?.currency)}</span>
+          <span style="font-size: 8px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: inline-flex; align-items: center; gap: 3px;">
+            <span style="width: 4px; height: 4px; border-radius: 50%; background: ${item.tags?.includes('Veg') ? 'var(--success)' : 'var(--danger)'}"></span>
+            ${item.tags?.includes('Veg') ? 'Veg' : 'Non-Veg'}
+          </span>
         </div>
-      `;
-      
-      // Make entire card clickable
-      card.addEventListener('click', () => {
-        addToCart(item);
-      });
-      
-      grid.appendChild(card);
+      </div>
+    `;
+    
+    // Make entire card clickable
+    card.addEventListener('click', () => {
+      addToCart(item);
     });
     
-    sec.appendChild(grid);
-    catalogGrid.appendChild(sec);
+    catalogGrid.appendChild(card);
   });
 
   if (window.lucide) window.lucide.createIcons();

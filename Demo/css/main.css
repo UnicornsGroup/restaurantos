@@ -638,13 +638,13 @@ button:active,
     min-width: auto;
   }
   .kds-grid {
-    grid-template-cols: 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
   }
 }
 @media (min-width: 769px) and (max-width: 1024px) {
   .kds-grid {
-    grid-template-cols: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
 }
