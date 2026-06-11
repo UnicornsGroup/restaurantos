@@ -17,11 +17,12 @@
 .billing-section {
   width: 420px;
   position: sticky;
-  top: 100px;
-  height: calc(100vh - 140px);
+  top: 90px;
+  height: calc(100vh - 110px);
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 16px;
+  overflow-y: auto;
 }
 
 /* Category horizontal tabs */
@@ -304,6 +305,7 @@
 
 .cart-items-wrapper {
   flex: 1;
+  min-height: 140px;
   overflow-y: auto;
   margin-bottom: 16px;
   display: flex;
