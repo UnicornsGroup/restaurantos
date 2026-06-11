@@ -131,6 +131,19 @@ const initOrderPage = () => {
     });
   }
 
+  const toggleDiscountBtn = document.getElementById('toggle-discount-details');
+  const discountDetailsFields = document.getElementById('discount-details-fields');
+  const discountChevron = document.getElementById('chevron-discount-details');
+  if (toggleDiscountBtn && discountDetailsFields) {
+    toggleDiscountBtn.addEventListener('click', () => {
+      const isHidden = discountDetailsFields.style.display === 'none';
+      discountDetailsFields.style.display = isHidden ? 'flex' : 'none';
+      if (discountChevron) {
+        discountChevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
+    });
+  }
+
   // Payment methods selection
   document.querySelectorAll('.payment-method-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -445,6 +458,11 @@ const loadTableCartAndBill = () => {
     const chevron = document.getElementById('chevron-customer-details');
     if (detailsFields) detailsFields.style.display = 'none';
     if (chevron) chevron.style.transform = 'rotate(0deg)';
+
+    const discountDetailsFields = document.getElementById('discount-details-fields');
+    const discountChevron = document.getElementById('chevron-discount-details');
+    if (discountDetailsFields) discountDetailsFields.style.display = 'none';
+    if (discountChevron) discountChevron.style.transform = 'rotate(0deg)';
     
     renderCart();
     return;
@@ -528,6 +546,16 @@ const loadTableCartAndBill = () => {
       detailsFields.style.display = hasInfo ? 'flex' : 'none';
       if (chevron) chevron.style.transform = hasInfo ? 'rotate(180deg)' : 'rotate(0deg)';
     }
+
+    const discountDetailsFields = document.getElementById('discount-details-fields');
+    const discountChevron = document.getElementById('chevron-discount-details');
+    if (discountDetailsFields) {
+      const hasDiscount = discountType !== 'none';
+      discountDetailsFields.style.display = hasDiscount ? 'flex' : 'none';
+      if (discountChevron) {
+        discountChevron.style.transform = hasDiscount ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
+    }
   } else {
     cart = [];
     discountType = 'none';
@@ -556,6 +584,11 @@ const loadTableCartAndBill = () => {
     const chevron = document.getElementById('chevron-customer-details');
     if (detailsFields) detailsFields.style.display = 'none';
     if (chevron) chevron.style.transform = 'rotate(0deg)';
+
+    const discountDetailsFields = document.getElementById('discount-details-fields');
+    const discountChevron = document.getElementById('chevron-discount-details');
+    if (discountDetailsFields) discountDetailsFields.style.display = 'none';
+    if (discountChevron) discountChevron.style.transform = 'rotate(0deg)';
   }
   renderCart();
   
@@ -767,6 +800,11 @@ const handleSettleAndPrintBill = async () => {
     const chevron = document.getElementById('chevron-customer-details');
     if (detailsFields) detailsFields.style.display = 'none';
     if (chevron) chevron.style.transform = 'rotate(0deg)';
+
+    const discountDetailsFields = document.getElementById('discount-details-fields');
+    const discountChevron = document.getElementById('chevron-discount-details');
+    if (discountDetailsFields) discountDetailsFields.style.display = 'none';
+    if (discountChevron) discountChevron.style.transform = 'rotate(0deg)';
     
     renderCart();
     
