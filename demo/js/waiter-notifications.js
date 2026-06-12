@@ -47,8 +47,8 @@ const initOneSignal = async (currentUser) => {
 
   try {
     await loadOneSignalSDK();
-    window.OneSignal = window.OneSignal || [];
-    window.OneSignal.push(async function() {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async function(OneSignal) {
       // Configure service worker paths explicitly to support both root and custom subdirectory deployments
       const pathName = window.location.pathname;
       const lastSlash = pathName.lastIndexOf('/');
@@ -62,12 +62,12 @@ const initOneSignal = async (currentUser) => {
         initOptions.serviceWorkerPath = 'OneSignalSDKWorker.js';
         initOptions.serviceWorkerParam = { scope: directoryScope };
       }
-      await window.OneSignal.init(initOptions);
+      await OneSignal.init(initOptions);
       
       // Associate active device with waiter ID
-      await window.OneSignal.login(currentUser.id);
-      await window.OneSignal.User.addTag("waiterId", currentUser.id);
-      console.log("OneSignal push notifications successfully initialized for waiter:", currentUser.id);
+      await OneSignal.login(currentUser.id);
+      await OneSignal.User.addTag("waiterId", currentUser.id);
+      console.log("OneSignal push notifications successfully initialized for waiter via Deferred API:", currentUser.id);
     });
   } catch (err) {
     console.error("OneSignal initialization failed:", err);
