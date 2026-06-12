@@ -29,21 +29,15 @@
     <!-- Main Workspace Content -->
     <main class="main-content">
       <div class="dashboard-panel">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <div>
             <h2 style="font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 4px;">Seating & QR Configurations</h2>
             <p style="font-size: 13px; color: var(--text-muted);">Configure restaurant tables, guest capacities, and generate digital menus QR codes</p>
           </div>
-          <div style="display: flex; gap: 12px;">
-            <a href="standee-generator.html" class="btn btn-secondary" style="border-color: #F57C00; color: #F57C00; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-              <i data-lucide="printer" style="width: 16px; height: 16px;"></i>
-              <span>Generate Standees</span>
-            </a>
-            <button id="add-table-btn" class="btn btn-primary">
-              <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
-              <span>Create Table</span>
-            </button>
-          </div>
+          <button id="add-table-btn" class="btn btn-primary">
+            <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+            <span>Create Table</span>
+          </button>
         </div>
         
         <div id="table-grid" class="table-grid">
