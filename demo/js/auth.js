@@ -1,4 +1,4 @@
-// Universal Authentication and Route Guard service for RestaurantOS
+// Universal Authentication and Route Guard service for DiningOS
 import { 
   auth, 
   db, 

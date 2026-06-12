@@ -1,4 +1,4 @@
-// Thermal Receipt printing service for RestaurantOS
+// Thermal Receipt printing service for DiningOS
 
 // Format and execute browser print window for cashier receipts
 export const printReceipt = (order, restaurant, currencySymbol = '₹') => {
@@ -116,7 +116,7 @@ export const printReceipt = (order, restaurant, currencySymbol = '₹') => {
         <div class="text-center footer-note">
           <div>GSTIN: IN27AABC1234F1Z5</div>
           <div style="margin-top: 8px; font-weight: bold;">THANK YOU! VISIT AGAIN</div>
-          <div style="font-size: 8px; color: #666; margin-top: 4px;">Powered by RestaurantOS</div>
+          <div style="font-size: 8px; color: #666; margin-top: 4px;">Powered by DiningOS</div>
         </div>
 
         <script>

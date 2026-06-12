@@ -1,4 +1,4 @@
-// QR Code utility services for RestaurantOS
+// QR Code utility services for DiningOS
 import { restaurantConfig } from './config.js';
 
 // Create dynamic table scan QR link pointing to customer mobile menu

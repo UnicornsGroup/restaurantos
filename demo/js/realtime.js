@@ -1,4 +1,4 @@
-// Firestore Realtime snapshot subscriptions manager for RestaurantOS
+// Firestore Realtime snapshot subscriptions manager for DiningOS
 import {
   db,
   collection,

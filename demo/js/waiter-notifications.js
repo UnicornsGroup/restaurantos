@@ -1,4 +1,4 @@
-// Waiter real-time notification alert module for RestaurantOS
+// Waiter real-time notification alert module for DiningOS
 import { db, collection, query, where, onSnapshot } from './firebase-config.js';
 
 let notifiedOrders = new Set();

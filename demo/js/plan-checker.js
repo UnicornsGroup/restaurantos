@@ -1,4 +1,4 @@
-// Plan Checker Service for RestaurantOS
+// Plan Checker Service for DiningOS
 import { firebaseConfig } from './config.js';
 
 // Default master functions endpoint (can be configured in config.js or default to standard fallback)
@@ -148,7 +148,7 @@ function createBlockerScreen(isCustomer, planData) {
         <div style="width: 72px; height: 72px; border-radius: 20px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); display: flex; align-items: center; justify-content: center; color: #ef4444; margin-bottom: 24px;">
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </div>
-        <h2 style="font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.02em;">RestaurantOS Access Suspended</h2>
+        <h2 style="font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.02em;">DiningOS Access Suspended</h2>
         <p style="font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.65; margin-bottom: 20px;">
           The subscription plan for restaurant <strong>${firebaseConfig.projectId}</strong> has expired and the grace period has ended. Access to POS tables, billing registers, and KDS monitors is locked.
         </p>
@@ -159,7 +159,7 @@ function createBlockerScreen(isCustomer, planData) {
         </div>
 
         <div style="display: flex; gap: 12px; width: 100%;">
-          <a href="https://wa.me/919988776655?text=Hi%20support,%20my%20RestaurantOS%20instance%20${firebaseConfig.projectId}%20is%20suspended.%20Please%20help%20me%20renew." target="_blank" style="flex: 1; text-align: center; text-decoration: none; background: #25d366; color: #fff; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; transition: opacity 0.2s;">
+          <a href="https://wa.me/919988776655?text=Hi%20support,%20my%20DiningOS%20instance%20${firebaseConfig.projectId}%20is%20suspended.%20Please%20help%20me%20renew." target="_blank" style="flex: 1; text-align: center; text-decoration: none; background: #25d366; color: #fff; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; transition: opacity 0.2s;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span>Renew via WhatsApp</span>
           </a>
@@ -199,7 +199,7 @@ function createGraceBanner(graceDaysLeft) {
 
   banner.innerHTML = `
     <span>⚠️ Subscription Expired: Your account is in its grace period. <strong>${graceDaysLeft} days remaining</strong> before service suspension.</span>
-    <a href="https://wa.me/919988776655?text=Hi%20support,%20my%20RestaurantOS%20instance%20${firebaseConfig.projectId}%20is%20in%20grace%20period.%20I%20need%20to%20renew." target="_blank" style="background: #fff; color: #ef4444; border: none; padding: 4px 10px; border-radius: 4px; font-weight: 700; text-decoration: none; font-size: 11px; display: inline-block;">Renew Now</a>
+    <a href="https://wa.me/919988776655?text=Hi%20support,%20my%20DiningOS%20instance%20${firebaseConfig.projectId}%20is%20in%20grace%20period.%20I%20need%20to%20renew." target="_blank" style="background: #fff; color: #ef4444; border: none; padding: 4px 10px; border-radius: 4px; font-weight: 700; text-decoration: none; font-size: 11px; display: inline-block;">Renew Now</a>
   `;
 
   // Prepend to body

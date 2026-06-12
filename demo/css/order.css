@@ -406,6 +406,68 @@
   .billing-section {
     padding: 16px;
   }
+}/* Modifiers selection styles */
+.modifier-group-box {
+  background: hsla(222, 47%, 2%, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
 }
-
-
+.modifier-group-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.modifier-group-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+.modifier-group-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.modifier-group-badge.required {
+  background: hsla(346, 80%, 55%, 0.15);
+  color: var(--danger);
+  border: 1px solid hsla(346, 80%, 55%, 0.25);
+}
+.modifier-group-badge.optional {
+  background: hsla(222, 47%, 10%, 0.4);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+.modifier-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.modifier-option-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: var(--text-main);
+  padding: 4px 0;
+}
+.modifier-option-item input {
+  margin-right: 8px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.modifier-option-label-wrapper {
+  display: flex;
+  align-items: center;
+}
+.modifier-option-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}

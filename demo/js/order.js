@@ -31,6 +31,17 @@ let activeCategoryFilter = 'all';
 let searchQuery = '';
 let selectedPaymentMethod = 'cash';
 
+// Customization Modifier Modal local state and refs
+let modifierModal = null;
+let closeModifierModal = null;
+let modifierModalDishName = null;
+let modifierModalDishPrice = null;
+let modifierGroupsContainer = null;
+let modifierSpecialInstructions = null;
+let addModifiedToCartBtn = null;
+let modifierModalSubtotal = null;
+let activeModifierItem = null;
+
 // DOM references
 const tableSelect = document.getElementById('tables-select');
 const categoriesScroll = document.getElementById('categories-tabs');
@@ -56,6 +67,26 @@ const btnSendKds = document.getElementById('btn-send-kds');
 const btnPayPrint = document.getElementById('btn-pay-print');
 
 const initOrderPage = () => {
+  // Initialize modifier modal references
+  modifierModal = document.getElementById('modifier-modal');
+  closeModifierModal = document.getElementById('close-modifier-modal');
+  modifierModalDishName = document.getElementById('modifier-modal-dish-name');
+  modifierModalDishPrice = document.getElementById('modifier-modal-dish-price');
+  modifierGroupsContainer = document.getElementById('modifier-groups-container');
+  modifierSpecialInstructions = document.getElementById('modifier-special-instructions');
+  addModifiedToCartBtn = document.getElementById('add-modified-to-cart-btn');
+  modifierModalSubtotal = document.getElementById('modifier-modal-subtotal');
+
+  if (closeModifierModal) {
+    closeModifierModal.addEventListener('click', () => {
+      toggleModal(modifierModal, false);
+      activeModifierItem = null;
+    });
+  }
+  if (addModifiedToCartBtn) {
+    addModifiedToCartBtn.addEventListener('click', handleAddModifiedToCart);
+  }
+
   // Bind inputs
   if (searchDishesInput) searchDishesInput.addEventListener('input', (e) => {
     searchQuery = e.target.value;
@@ -269,7 +300,11 @@ const renderCatalog = () => {
     
     // Make entire card clickable
     card.addEventListener('click', () => {
-      addToCart(item);
+      if (item.modifierGroups && item.modifierGroups.length > 0) {
+        openModifierModal(item);
+      } else {
+        addToCart(item);
+      }
     });
     
     catalogGrid.appendChild(card);
@@ -278,28 +313,48 @@ const renderCatalog = () => {
   if (window.lucide) window.lucide.createIcons();
 };
 
-const addToCart = (item) => {
-  const existing = cart.find(i => i.item_id === item.id);
+const addToCartWithModifiers = (item, selectedModifiers = [], instruction = '') => {
+  const existing = cart.find(i => {
+    if (i.item_id !== item.id) return false;
+    if ((i.special_instruction || '') !== (instruction || '')) return false;
+    const aMods = i.selected_modifiers || [];
+    const bMods = selectedModifiers || [];
+    if (aMods.length !== bMods.length) return false;
+    const aStr = aMods.map(m => `${m.groupName}:${m.name}`).sort().join('|');
+    const bStr = bMods.map(m => `${m.groupName}:${m.name}`).sort().join('|');
+    return aStr === bStr;
+  });
+
+  const basePrice = item.price;
+  const modSum = selectedModifiers.reduce((sum, m) => sum + m.price, 0);
+  const finalPrice = basePrice + modSum;
+
   if (existing) {
     existing.quantity += 1;
   } else {
     cart.push({
+      cartId: 'cart_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
       item_id: item.id,
       name: item.name,
-      price: item.price,
+      price: finalPrice,
       quantity: 1,
-      special_instruction: null
+      selected_modifiers: selectedModifiers,
+      special_instruction: instruction || null
     });
   }
   renderCart();
 };
 
-const updateCartItemQuantity = (itemId, change) => {
-  const row = cart.find(i => i.item_id === itemId);
+const addToCart = (item) => {
+  addToCartWithModifiers(item, [], '');
+};
+
+const updateCartItemQuantity = (cartId, change) => {
+  const row = cart.find(i => i.cartId === cartId);
   if (row) {
     row.quantity += change;
     if (row.quantity <= 0) {
-      cart = cart.filter(i => i.item_id !== itemId);
+      cart = cart.filter(i => i.cartId !== cartId);
     }
   }
   renderCart();
@@ -311,11 +366,13 @@ const populateDiscountItemSelect = () => {
   discountItemSelect.innerHTML = '<option value="">-- Choose Item --</option>';
   cart.forEach(item => {
     const opt = document.createElement('option');
-    opt.value = item.item_id;
-    opt.innerText = `${item.name} (${item.quantity}x)`;
+    opt.value = item.cartId;
+    const modsText = item.selected_modifiers && item.selected_modifiers.length > 0 ? 
+      ` (${item.selected_modifiers.map(m => m.name).join(', ')})` : '';
+    opt.innerText = `${item.name}${modsText} (${item.quantity}x)`;
     discountItemSelect.appendChild(opt);
   });
-  if (cart.some(i => i.item_id === currentVal)) {
+  if (cart.some(i => i.cartId === currentVal)) {
     discountItemSelect.value = currentVal;
   } else {
     discountItemId = '';
@@ -358,15 +415,15 @@ const renderCart = () => {
         ${item.special_instruction ? `<p style="font-size: 10px; color: var(--primary-hover); font-style: italic; margin-top: 2px;">Note: ${item.special_instruction}</p>` : ''}
       </div>
       <div class="cart-item-qty-selector">
-        <button type="button" class="qty-btn-circle dec" data-id="${item.item_id}">
+        <button type="button" class="qty-btn-circle dec" data-cart-id="${item.cartId}">
           <i data-lucide="minus" style="width: 12px; height: 12px;"></i>
         </button>
         <span style="font-weight: 750; color: #fff; font-size: 13px; min-width: 14px; text-align: center;">${item.quantity}</span>
-        <button type="button" class="qty-btn-circle inc" data-id="${item.item_id}">
+        <button type="button" class="qty-btn-circle inc" data-cart-id="${item.cartId}">
           <i data-lucide="plus" style="width: 12px; height: 12px;"></i>
         </button>
       </div>
-      <button type="button" class="cart-item-delete-btn" data-id="${item.item_id}" title="Remove Item">
+      <button type="button" class="cart-item-delete-btn" data-cart-id="${item.cartId}" title="Remove Item">
         <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
       </button>
       <div style="width: 76px; text-align: right; font-size: 13px; font-weight: 700; color: #fff;">
@@ -376,15 +433,15 @@ const renderCart = () => {
 
     div.querySelector('.dec').addEventListener('click', (e) => {
       e.stopPropagation();
-      updateCartItemQuantity(item.item_id, -1);
+      updateCartItemQuantity(item.cartId, -1);
     });
     div.querySelector('.inc').addEventListener('click', (e) => {
       e.stopPropagation();
-      updateCartItemQuantity(item.item_id, 1);
+      updateCartItemQuantity(item.cartId, 1);
     });
     div.querySelector('.cart-item-delete-btn').addEventListener('click', (e) => {
       e.stopPropagation();
-      updateCartItemQuantity(item.item_id, -item.quantity);
+      updateCartItemQuantity(item.cartId, -item.quantity);
     });
 
     cartItemsWrapper.appendChild(div);
@@ -408,7 +465,7 @@ const calculateCheckoutTotal = () => {
   } else if (discountType === 'percent') {
     discountAmount = Math.min(subtotal, (discountValue / 100) * subtotal);
   } else if (discountType === 'item') {
-    const row = cart.find(i => i.item_id === discountItemId);
+    const row = cart.find(i => i.cartId === discountItemId);
     if (row) {
       const itemSubtotal = row.price * row.quantity;
       discountAmount = Math.min(itemSubtotal, (discountValue / 100) * itemSubtotal);
@@ -489,6 +546,7 @@ const loadTableCartAndBill = () => {
             existing.quantity += item.quantity;
           } else {
             aggregatedItems.push({
+              cartId: 'cart_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4) + '_' + item.item_id,
               item_id: item.item_id,
               name: item.name,
               price: item.price,
@@ -814,6 +872,120 @@ const handleSettleAndPrintBill = async () => {
   } finally {
     btnPayPrint.disabled = false;
   }
+};
+
+const openModifierModal = (item) => {
+  activeModifierItem = item;
+  if (modifierModalDishName) modifierModalDishName.innerText = item.name;
+  const curSymbol = activeRestaurant?.currency || '₹';
+  if (modifierModalDishPrice) modifierModalDishPrice.innerText = `Base: ${curSymbol}${parseFloat(item.price.toString()).toFixed(2)}`;
+  if (modifierSpecialInstructions) modifierSpecialInstructions.value = '';
+  
+  renderModifierGroupsForSelection();
+  
+  toggleModal(modifierModal, true);
+};
+
+const renderModifierGroupsForSelection = () => {
+  if (!modifierGroupsContainer) return;
+  modifierGroupsContainer.innerHTML = '';
+  const curSymbol = activeRestaurant?.currency || '₹';
+  const groups = activeModifierItem.modifierGroups || [];
+  
+  groups.forEach((group, groupIdx) => {
+    const box = document.createElement('div');
+    box.className = 'modifier-group-box';
+    
+    const isRequired = group.required;
+    const isMulti = group.multiSelect;
+    
+    box.innerHTML = `
+      <div class="modifier-group-title-row">
+        <span class="modifier-group-name">${group.groupName}</span>
+        <span class="modifier-group-badge ${isRequired ? 'required' : 'optional'}">
+          ${isRequired ? 'Required' : 'Optional'}
+        </span>
+      </div>
+      <div class="modifier-options-list">
+        ${(group.modifiers || []).map((mod, modIdx) => {
+          const type = isMulti ? 'checkbox' : 'radio';
+          const inputName = `mod_group_${groupIdx}`;
+          const label = mod.name;
+          const priceOffset = mod.price > 0 ? ` (+${curSymbol}${mod.price})` : (mod.price < 0 ? ` (-${curSymbol}${Math.abs(mod.price)})` : '');
+          
+          return `
+            <label class="modifier-option-item">
+              <div class="modifier-option-label-wrapper">
+                <input type="${type}" name="${inputName}" data-group-idx="${groupIdx}" data-mod-idx="${modIdx}" class="modifier-input">
+                <span>${label}</span>
+              </div>
+              <span class="modifier-option-price">${priceOffset}</span>
+            </label>
+          `;
+        }).join('')}
+      </div>
+    `;
+    
+    box.querySelectorAll('.modifier-input').forEach(input => {
+      input.addEventListener('change', () => {
+        recalculateModifierSubtotal();
+      });
+    });
+    
+    modifierGroupsContainer.appendChild(box);
+  });
+  
+  recalculateModifierSubtotal();
+};
+
+const recalculateModifierSubtotal = () => {
+  if (!activeModifierItem || !modifierModalSubtotal) return;
+  const curSymbol = activeRestaurant?.currency || '₹';
+  let total = parseFloat(activeModifierItem.price.toString());
+  
+  const inputs = modifierGroupsContainer.querySelectorAll('.modifier-input:checked');
+  inputs.forEach(input => {
+    const gIdx = parseInt(input.dataset.groupIdx);
+    const mIdx = parseInt(input.dataset.modIdx);
+    const mod = activeModifierItem.modifierGroups[gIdx].modifiers[mIdx];
+    total += parseFloat(mod.price || 0);
+  });
+  
+  modifierModalSubtotal.innerText = `${curSymbol}${total.toFixed(2)}`;
+};
+
+const handleAddModifiedToCart = () => {
+  if (!activeModifierItem) return;
+  
+  const groups = activeModifierItem.modifierGroups || [];
+  const selectedModifiers = [];
+  
+  for (let gIdx = 0; gIdx < groups.length; gIdx++) {
+    const group = groups[gIdx];
+    const isRequired = group.required;
+    
+    const checkedInputs = modifierGroupsContainer.querySelectorAll(`.modifier-input[data-group-idx="${gIdx}"]:checked`);
+    if (isRequired && checkedInputs.length === 0) {
+      alert(`Please make a selection in "${group.groupName}".`);
+      return;
+    }
+    
+    checkedInputs.forEach(input => {
+      const mIdx = parseInt(input.dataset.modIdx);
+      const mod = group.modifiers[mIdx];
+      selectedModifiers.push({
+        groupName: group.groupName,
+        name: mod.name,
+        price: parseFloat(mod.price || 0)
+      });
+    });
+  }
+  
+  const instruction = modifierSpecialInstructions ? modifierSpecialInstructions.value.trim() : '';
+  addToCartWithModifiers(activeModifierItem, selectedModifiers, instruction);
+  
+  toggleModal(modifierModal, false);
+  activeModifierItem = null;
 };
 
 // Start

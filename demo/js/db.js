@@ -1,4 +1,4 @@
-// Firestore CRUD database service operations for RestaurantOS
+// Firestore CRUD database service operations for DiningOS
 import {
   db,
   collection,

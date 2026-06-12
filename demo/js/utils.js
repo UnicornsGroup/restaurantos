@@ -1,4 +1,4 @@
-// Shared UI and Utility functions for RestaurantOS
+// Shared UI and Utility functions for DiningOS
 
 // Inject global navigation header across POS panels dynamically
 export const injectHeader = (activeTabId, currentUser, currentRestaurant) => {
@@ -74,7 +74,7 @@ export const injectHeader = (activeTabId, currentUser, currentRestaurant) => {
                         </div>`}
           <div>
             <h1 id="profile-restaurant-name" style="font-size: 14px; font-weight: 700; color: #f1f5f9;">${restName}</h1>
-            <span style="font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; color: var(--primary-hover);">RestaurantOS Portal</span>
+            <span style="font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; color: var(--primary-hover);">DiningOS Portal</span>
           </div>
         </div>
 

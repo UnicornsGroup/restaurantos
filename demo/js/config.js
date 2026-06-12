@@ -1,4 +1,4 @@
-// RestaurantOS Serverless Settings & Customization
+// DiningOS Serverless Settings & Customization
 export const firebaseConfig = {
   apiKey: "AIzaSyDAQ97SW9nC_ptq8uM3zRYzsUNw0EK1ToY",
   authDomain: "restaurantos-9ab2a.firebaseapp.com",

@@ -1,4 +1,4 @@
-# RestaurantOS Multi-Tenant Point of Sale (POS)
+# DiningOS Multi-Tenant Point of Sale (POS)
 
 A multi-tenant Restaurant Point of Sale platform optimized for Indian restaurants. It supports QR code generation per table, digital menus, real-time order routing via WebSockets, and a visual table layout control.
 
