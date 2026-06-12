@@ -49,10 +49,17 @@ const initOneSignal = async (currentUser) => {
     await loadOneSignalSDK();
     window.OneSignal = window.OneSignal || [];
     window.OneSignal.push(async function() {
-      await window.OneSignal.init({
+      // Configure service worker paths explicitly to support both root and subdirectory deployments
+      const isSubdir = window.location.pathname.toLowerCase().includes('/demo/');
+      const initOptions = {
         appId: appId,
         allowLocalhostAsSecureOrigin: true
-      });
+      };
+      if (isSubdir) {
+        initOptions.serviceWorkerPath = 'OneSignalSDKWorker.js';
+        initOptions.serviceWorkerParam = { scope: '/Demo/' };
+      }
+      await window.OneSignal.init(initOptions);
       
       // Associate active device with waiter ID
       await window.OneSignal.login(currentUser.id);
