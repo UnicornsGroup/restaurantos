@@ -40,6 +40,17 @@
           </button>
         </div>
         
+        <!-- Ready to Serve Section (only displayed when active ready orders exist for this waiter) -->
+        <div id="ready-orders-section" class="hidden" style="margin-bottom: 28px; background: hsla(142, 70%, 5%, 0.15); border: 1px dashed hsla(142, 70%, 45%, 0.3); border-radius: 14px; padding: 20px 24px;">
+          <h3 style="font-size: 15px; font-weight: 700; color: var(--success); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="bell-ring" style="width: 16px; height: 16px; animation: pulse 2s infinite;"></i>
+            <span>Ready to Serve</span>
+          </h3>
+          <div id="ready-orders-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+            <!-- Rendered dynamically via js/tables.js -->
+          </div>
+        </div>
+        
         <div id="table-grid" class="table-grid">
           <!-- Dynamically populated tables from js/tables.js -->
         </div>

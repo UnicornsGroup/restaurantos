@@ -4,11 +4,14 @@ import { updateTableStatus, saveGuest } from './db.js';
 import { subscribeTables } from './realtime.js';
 import { toggleModal } from './utils.js';
 import { generateTableQrUrl } from './qr-generator.js';
+import { db, collection, query, where, onSnapshot } from './firebase-config.js';
 
 let activeUser = null;
 let activeRestaurant = null;
 let tablesList = [];
 let tablesUnsubscribe = null;
+let readyOrdersListGlobal = [];
+let readyOrdersUnsubscribe = null;
 
 // DOM references
 const tableGrid = document.getElementById('table-grid');
@@ -91,9 +94,104 @@ const initTablesPage = () => {
   tablesUnsubscribe = subscribeTables((tables) => {
     tablesList = tables.sort((a, b) => String(a.table_number || '').localeCompare(String(b.table_number || '')));
     renderTables();
-  }, (err) => {
-    console.error("Tables sync failed:", err);
   });
+
+  // Subscribe to ready orders if user is a waiter
+  if (readyOrdersUnsubscribe) readyOrdersUnsubscribe();
+  
+  const isWaiterUser = activeUser?.role === 'waiter';
+  const assignedTables = activeUser?.assigned_tables;
+  
+  if (isWaiterUser && Array.isArray(assignedTables) && assignedTables.length > 0) {
+    const q = query(
+      collection(db, 'orders'),
+      where('status', '==', 'ready'),
+      where('table_id', 'in', assignedTables)
+    );
+    
+    readyOrdersUnsubscribe = onSnapshot(q, (snapshot) => {
+      readyOrdersListGlobal = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderReadyOrders();
+      renderTables(); // Re-render to show visual alert badges on table cards
+    }, (err) => {
+      console.error("Waiter ready orders sync failed:", err);
+    });
+  } else {
+    const section = document.getElementById('ready-orders-section');
+    if (section) section.classList.add('hidden');
+  }
+};
+
+const renderReadyOrders = () => {
+  const section = document.getElementById('ready-orders-section');
+  const list = document.getElementById('ready-orders-list');
+  if (!section || !list) return;
+
+  if (readyOrdersListGlobal.length === 0) {
+    section.classList.add('hidden');
+    return;
+  }
+
+  section.classList.remove('hidden');
+  list.innerHTML = '';
+
+  readyOrdersListGlobal.forEach(order => {
+    const card = document.createElement('div');
+    card.className = 'glass-panel';
+    card.style.cssText = `
+      padding: 16px;
+      border-left: 4px solid var(--success);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: hsla(142, 70%, 5%, 0.25);
+      border-color: hsla(142, 70%, 45%, 0.25);
+    `;
+
+    const itemsText = order.items.map(item => `${item.name} (x${item.quantity})`).join(', ');
+
+    card.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+        <div>
+          <h4 style="color: #fff; font-size: 15px; font-weight: 700; margin: 0;">${order.table_number || 'Table'}</h4>
+          <span style="font-size: 11px; color: var(--text-muted);">#${order.id.slice(0, 8).toUpperCase()}</span>
+        </div>
+        <button class="btn btn-primary btn-serve-order" data-id="${order.id}" data-table-id="${order.table_id || ''}" style="padding: 6px 12px; font-size: 12px; background: var(--success); box-shadow: 0 4px 12px var(--success-glow); display: flex; align-items: center; gap: 4px; border-color: var(--success);">
+          <i data-lucide="check" style="width: 14px; height: 14px;"></i>
+          <span>Mark Served</span>
+        </button>
+      </div>
+      <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4; border-top: 1px solid var(--border-color); padding-top: 8px;">
+        <strong style="color: #fff;">Items:</strong> ${itemsText}
+      </div>
+    `;
+
+    // Click handler for serve button
+    card.querySelector('.btn-serve-order').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const orderId = e.currentTarget.dataset.id;
+      const tableId = e.currentTarget.dataset.tableId;
+      
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.innerHTML = '<span>Serving...</span>';
+
+      try {
+        const { updateOrderStatus } = await import('./db.js');
+        await updateOrderStatus(orderId, 'served', tableId);
+      } catch (err) {
+        console.error("Failed to mark order as served:", err);
+        alert("Failed to mark served.");
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="check" style="width: 14px; height: 14px;"></i><span>Mark Served</span>';
+        if (window.lucide) window.lucide.createIcons();
+      }
+    });
+
+    list.appendChild(card);
+  });
+
+  if (window.lucide) window.lucide.createIcons();
 };
 
 const renderTables = () => {
@@ -123,10 +221,16 @@ const renderTables = () => {
     card.style.cursor = 'pointer';
     
     if (isWaiter) {
+      const hasReadyOrder = readyOrdersListGlobal.some(o => o.table_id === table.id);
+      let badgeHtml = `<span class="badge ${table.status === 'occupied' ? 'badge-danger' : 'badge-success'}">${table.status || 'free'}</span>`;
+      if (hasReadyOrder) {
+        badgeHtml = `<span class="badge" style="background: var(--success); color: #fff; box-shadow: 0 0 10px var(--success-glow); animation: pulse 2s infinite; border-color: var(--success);">Ready to Serve</span>`;
+      }
+
       card.innerHTML = `
         <div class="table-card-header">
           <span class="table-card-number">${table.table_number}</span>
-          <span class="badge ${table.status === 'occupied' ? 'badge-danger' : 'badge-success'}">${table.status || 'free'}</span>
+          ${badgeHtml}
         </div>
         <div class="table-card-body">
           <i data-lucide="users" style="width: 14px; height: 14px; opacity: 0.6;"></i>
@@ -229,4 +333,5 @@ window.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('beforeunload', () => {
   if (tablesUnsubscribe) tablesUnsubscribe();
+  if (readyOrdersUnsubscribe) readyOrdersUnsubscribe();
 });

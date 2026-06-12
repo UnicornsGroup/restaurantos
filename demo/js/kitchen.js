@@ -164,7 +164,10 @@ const renderKdsTickets = () => {
           <button class="btn btn-primary btn-kds-transition" style="flex: 1; padding: 8px 12px; font-size: 12px; background: var(--success); box-shadow: 0 4px 14px 0 var(--success-glow);" data-id="${order.id}" data-action="ready">Mark Ready</button>
         ` : ''}
         ${order.status === 'ready' ? `
-          <button class="btn btn-primary btn-kds-transition" style="flex: 1; padding: 8px 12px; font-size: 12px; background: var(--secondary); box-shadow: none;" data-id="${order.id}" data-action="served">Mark Served</button>
+          <div style="font-size: 11px; color: var(--success); text-align: center; width: 100%; font-weight: 600; padding: 6px 0; border: 1px dashed var(--success); border-radius: 8px; background: hsla(142, 70%, 5%, 0.1); display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <i data-lucide="bell" style="width: 12px; height: 12px; animation: pulse 2s infinite;"></i>
+            <span>Waiting for Waiter to Serve</span>
+          </div>
         ` : ''}
         <button class="btn btn-secondary btn-kds-transition" style="padding: 8px 12px; font-size: 12px; border-color: var(--danger-glow); color: var(--danger);" data-id="${order.id}" data-action="cancelled">Cancel</button>
       </div>
@@ -199,7 +202,6 @@ const renderKdsTickets = () => {
           // Swipe Right: Advance status
           if (order.status === 'received') nextStatus = 'preparing';
           else if (order.status === 'preparing') nextStatus = 'ready';
-          else if (order.status === 'ready') nextStatus = 'served';
         } else {
           // Swipe Left: Revert status
           if (order.status === 'preparing') nextStatus = 'received';
