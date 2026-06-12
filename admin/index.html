@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DiningOS — Master Admin Dashboard</title>
+  <link rel="stylesheet" href="css/admin.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js for revenue analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Razorpay Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+
+  <!-- 1. LOGIN SECTION -->
+  <div id="auth-view" class="auth-wrapper">
+    <div class="glass-panel auth-card">
+      <div style="text-align: center; margin-bottom: 8px;">
+        <div class="logo-box" style="margin: 0 auto 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: var(--primary); border-radius: 10px; color: #fff;">
+          <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i>
+        </div>
+        <h2 style="font-size: 20px; font-weight: 700; color: var(--primary);">Master Console</h2>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">DiningOS Subscription & Core Management</p>
+      </div>
+
+      <div id="login-error" class="hidden" style="color: var(--danger); font-size: 12px; background: var(--danger-glow); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 8px; margin-bottom: 12px;">
+        Invalid administrator credentials.
+      </div>
+
+      <form id="login-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <div>
+          <label for="admin-email">Admin Email</label>
+          <input type="email" id="admin-email" required placeholder="admin@restaurantos.in" value="admin@restaurantos.in">
+        </div>
+        <div>
+          <label for="admin-password">Password</label>
+          <input type="password" id="admin-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Access Master Console</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. DASHBOARD VIEW -->
+  <div id="dashboard-view" class="dashboard-container hidden">
+    
+    <!-- Left Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="logo-box">
+          <i data-lucide="shield-check" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div>
+          <h2>DiningOS</h2>
+          <p>Master Operations</p>
+        </div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <button class="nav-item tab-btn active" data-tab="overview">
+          <i data-lucide="bar-chart-3"></i>
+          <span>Overview</span>
+        </button>
+        <button class="nav-item tab-btn" data-tab="restaurants">
+          <i data-lucide="store"></i>
+          <span>Restaurants</span>
+        </button>
+        <button class="nav-item tab-btn" data-tab="alerts">
+          <i data-lucide="bell-ring"></i>
+          <span>Expiry & Alerts</span>
+        </button>
+        <button class="nav-item tab-btn" data-tab="add-restaurant">
+          <i data-lucide="user-plus"></i>
+          <span>Onboard Client</span>
+        </button>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="admin-profile">
+          <div class="avatar">AD</div>
+          <div class="profile-info">
+            <span class="profile-name">Administrator</span>
+            <span class="profile-role">Master Admin</span>
+          </div>
+        </div>
+        <button id="logout-btn" class="btn btn-logout">
+          <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Metrics Row -->
+      <section class="metrics-grid">
+        <div class="glass-panel metric-card">
+          <span class="metric-label">Monthly Rec. Revenue</span>
+          <span id="mrr-val" class="metric-value">₹0.00</span>
+          <span class="metric-subtext">Active subscriptions</span>
+        </div>
+        <div class="glass-panel metric-card">
+          <span class="metric-label">Total Clients</span>
+          <span id="total-clients-val" class="metric-value">0</span>
+          <span class="metric-subtext">Restaurants onboarded</span>
+        </div>
+        <div class="glass-panel metric-card">
+          <span class="metric-label">Grace / Suspended</span>
+          <span id="grace-susp-val" class="metric-value" style="color: var(--warning);">0</span>
+          <span class="metric-subtext">Require attention</span>
+        </div>
+        <div class="glass-panel metric-card">
+          <span class="metric-label">Trial Accounts</span>
+          <span id="trials-val" class="metric-value" style="color: #0050b3;">0</span>
+          <span class="metric-subtext">Evaluation phase</span>
+        </div>
+        <div class="glass-panel metric-card">
+          <span class="metric-label">Projected ARR</span>
+          <span id="arr-val" class="metric-value">₹0.00</span>
+          <span class="metric-subtext">Annualized run rate</span>
+        </div>
+      </section>
+
+      <!-- Active Tab Panel Container -->
+      <div class="page-container">
+        
+        <!-- TAB A: OVERVIEW -->
+        <div id="tab-overview" class="tab-content dashboard-grid">
+          <div class="glass-panel">
+            <div class="panel-header">
+              <h3 class="panel-title">Annual Revenue Projections</h3>
+              <span style="font-size: 11px; color: var(--text-muted);">Real-time capture metrics</span>
+            </div>
+            <div class="panel-body">
+              <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="revenue-chart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-panel">
+            <div class="panel-header">
+              <h3 class="panel-title">System Status & Integrations</h3>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column; gap: 16px;">
+              <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                <span style="color: var(--text-muted);">Razorpay Webhook Endpoint</span>
+                <span style="color: var(--success); font-weight: 700;">ACTIVE (200)</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                <span style="color: var(--text-muted);">EmailJS Provider Status</span>
+                <span style="color: var(--success); font-weight: 700;">CONNECTED</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                <span style="color: var(--text-muted);">Cron Expiry Job</span>
+                <span style="color: var(--text-muted);">Runs daily 9 AM IST</span>
+              </div>
+              <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 8px;">
+                <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Recent System Logs</h4>
+                <div id="system-logs-container" style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; font-family: monospace; font-size: 11px; max-height: 100px; overflow-y: auto; color: var(--text-muted);">
+                  [LOG 16:51:39] Webhook verified payment signature successfully.<br>
+                  [LOG 09:00:02] Expiry cron job checked 24 accounts. No status updates needed.<br>
+                  [LOG 09:00:00] Expiry checker cron triggered successfully.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB B: RESTAURANTS -->
+        <div id="tab-restaurants" class="tab-content glass-panel hidden">
+          <div class="panel-header">
+            <h3 class="panel-title">Registered Restaurants Directory</h3>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <input type="text" id="search-restaurants" placeholder="Search by name, ID or mobile..." style="width: 250px; height: 36px; font-size: 12px; padding: 0 12px; border-radius: 8px;">
+              <button id="export-csv-btn" class="btn btn-secondary" style="height: 36px; font-size: 12px; padding: 0 16px; border-radius: 8px;">
+                <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+                <span>Export CSV</span>
+              </button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Restaurant Name</th>
+                    <th>Contact Info</th>
+                    <th>Plan & Billing</th>
+                    <th>Grace Start</th>
+                    <th>Expiration Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="restaurants-table-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB C: EXPIRES & ALERTS -->
+        <div id="tab-alerts" class="tab-content glass-panel hidden">
+          <div class="panel-header">
+            <h3 class="panel-title">Expiry Warning & Suspension Actions</h3>
+            <span style="font-size: 11px; color: var(--text-muted);">Requires support intervention</span>
+          </div>
+          <div class="panel-body">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Restaurant</th>
+                    <th>Days Left / Overdue</th>
+                    <th>Mobile Number</th>
+                    <th>Status</th>
+                    <th>Actions Panel</th>
+                  </tr>
+                </thead>
+                <tbody id="alerts-table-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB D: ADD RESTAURANT -->
+        <div id="tab-add-restaurant" class="tab-content glass-panel hidden" style="max-width: 650px; margin: 0 auto;">
+          <div class="panel-header">
+            <h3 class="panel-title">Onboard New Restaurant Setup</h3>
+          </div>
+          <div class="panel-body">
+            <form id="add-restaurant-form" style="display: flex; flex-direction: column; gap: 16px; text-align: left;">
+              <div style="display: flex; gap: 16px;">
+                <div style="flex: 1;">
+                  <label for="new-rest-id">Firebase Project ID / ID</label>
+                  <input type="text" id="new-rest-id" required placeholder="e.g. restro-delight-101">
+                </div>
+                <div style="flex: 1;">
+                  <label for="new-rest-name">Restaurant Name</label>
+                  <input type="text" id="new-rest-name" required placeholder="e.g. Delight Cafe">
+                </div>
+              </div>
+              
+              <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 180px;">
+                  <label for="new-rest-owner">Owner Name</label>
+                  <input type="text" id="new-rest-owner" required placeholder="e.g. Sandeep Patel">
+                </div>
+                <div style="flex: 1; min-width: 180px;">
+                  <label for="new-rest-mobile">Owner Mobile (10-digit)</label>
+                  <input type="tel" id="new-rest-mobile" required placeholder="e.g. 9988776655" pattern="[0-9]{10}" maxlength="10">
+                </div>
+                <div style="flex: 1; min-width: 180px;">
+                  <label for="new-rest-email">Owner Email</label>
+                  <input type="email" id="new-rest-email" required placeholder="e.g. owner@email.com">
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 250px;">
+                  <label for="new-rest-plan">Subscription Plan</label>
+                  <select id="new-rest-plan">
+                    <option value="trial">Trial (15 days)</option>
+                    <option value="monthly">Monthly Premium (₹1,999)</option>
+                    <option value="annual">Annual Saver (₹19,999)</option>
+                    <option value="lifetime">Lifetime Plan</option>
+                  </select>
+                </div>
+                <div style="flex: 1; min-width: 250px;">
+                  <label for="new-rest-tables">Number of Tables</label>
+                  <input type="number" id="new-rest-tables" min="1" placeholder="e.g. 15">
+                </div>
+              </div>
+
+              <div id="setup-fee-container" class="hidden" style="background: #1E2D4A; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; text-align: center;">
+                <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">Setup Fee: ₹<span id="setup-fee-amount">0.00</span></div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">(incl. 18% GST)</div>
+                <button id="rzp-pay-btn" type="button" class="btn btn-primary" style="background-color: var(--primary); color: #fff; height: 48px; width: 100%; box-shadow: 0 4px 14px var(--primary-glow);">PAY NOW</button>
+              </div>
+
+              <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 250px;">
+                  <label for="new-rest-setupfee">Setup Fee Paid (₹)</label>
+                  <input type="number" id="new-rest-setupfee" value="0" min="0" readonly style="opacity: 0.8;">
+                </div>
+                <div style="flex: 1; min-width: 250px;">
+                  <label for="new-rest-payment-id">Razorpay Payment ID</label>
+                  <input type="text" id="new-rest-payment-id" placeholder="Will autofill after Pay Now" readonly style="opacity: 0.8;">
+                </div>
+              </div>
+
+              <div>
+                <label for="new-rest-notes">Admin Notes & Internal Details</label>
+                <textarea id="new-rest-notes" placeholder="e.g. custom domain requests, special payment terms..." style="min-height: 80px; resize: none;"></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Create Account Profile & Initialize Grace Checks</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Detail/Edit Modal -->
+  <div id="detail-modal" class="modal-backdrop hidden">
+    <div class="glass-panel modal-content" style="position: relative; max-width: 500px; width: 90%; text-align: left;">
+      <button id="close-detail-modal" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+      </button>
+      
+      <h3 id="modal-rest-name" style="font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">Restaurant Name</h3>
+      <p id="modal-rest-id" style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px;">ID: #101</p>
+
+      <!-- Action Bar -->
+      <div id="modal-action-bar" style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+        <a id="modal-call-btn" href="#" style="text-decoration: none; flex: 1; min-width: 100px;">
+          <button type="button" class="btn btn-secondary" style="width: 100%; height: 48px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">📞 Call</button>
+        </a>
+        <button id="modal-whatsapp-btn" type="button" class="btn btn-secondary" style="flex: 1; min-width: 100px; height: 48px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">💬 WhatsApp</button>
+        <button id="modal-email-btn" type="button" class="btn btn-secondary" style="flex: 1; min-width: 100px; height: 48px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">✉️ Email</button>
+        <button id="modal-renew-btn" type="button" class="btn btn-secondary" style="flex: 1; min-width: 100px; height: 48px; font-size: 12px; border-color: rgba(22,163,74,0.4); color: var(--success); display: inline-flex; align-items: center; justify-content: center; gap: 4px;">Renew</button>
+        <button id="modal-suspend-btn" type="button" class="btn btn-secondary" style="flex: 1; min-width: 100px; height: 48px; font-size: 12px; border-color: rgba(239,68,68,0.4); color: var(--danger); display: inline-flex; align-items: center; justify-content: center; gap: 4px;">Suspend</button>
+        <button id="modal-extend-btn" type="button" class="btn btn-secondary" style="flex: 1; min-width: 100px; height: 48px; font-size: 12px; border-color: rgba(139,35,35,0.4); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; gap: 4px;">Extend</button>
+      </div>
+
+      <form id="edit-rest-form" style="display: flex; flex-direction: column; gap: 14px;">
+        <input type="hidden" id="edit-id">
+        <div style="display: flex; gap: 12px;">
+          <div style="flex: 1;">
+            <label for="edit-plan">Billing Plan</label>
+            <select id="edit-plan">
+              <option value="trial">Trial</option>
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+              <option value="lifetime">Lifetime</option>
+            </select>
+          </div>
+          <div style="flex: 1;">
+            <label for="edit-status">Account Status</label>
+            <select id="edit-status">
+              <option value="active">Active</option>
+              <option value="grace">Grace Period</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+          <div style="flex: 1;">
+            <label for="edit-expiry">Expiration Date</label>
+            <input type="date" id="edit-expiry">
+          </div>
+          <div style="flex: 1;">
+            <label for="edit-grace-start">Grace Period Start Date</label>
+            <input type="date" id="edit-grace-start">
+          </div>
+        </div>
+
+        <div>
+          <label for="edit-notes">Admin Notes</label>
+          <textarea id="edit-notes" style="min-height: 60px; resize: none;"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 6px;">Save Updated Subscriptions</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

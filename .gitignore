@@ -1,0 +1,14 @@
+# Environment variables and secrets
+.env
+.env*.local
+**/functions/.env
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Firebase configuration caches
+.firebase/
+.firebaserc.local
+firebase-debug.log
+firebase-debug.*.log

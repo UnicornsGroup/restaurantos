@@ -1,0 +1,16 @@
+{
+  "name": "restaurantos-admin-functions",
+  "description": "Firebase Cloud Functions for RestaurantOS Master Admin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^11.8.0",
+    "firebase-functions": "^4.3.1",
+    "cors": "^2.8.5",
+    "nodemailer": "^6.9.1"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "private": true
+}
