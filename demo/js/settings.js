@@ -38,6 +38,8 @@ const initSettingsPage = async () => {
       const slugEl = document.getElementById('set-rest-slug');
       const gstinEl = document.getElementById('set-rest-gstin');
       const stateEl = document.getElementById('set-rest-state');
+      const onesignalAppIdEl = document.getElementById('set-onesignal-appid');
+      const onesignalRestKeyEl = document.getElementById('set-onesignal-restkey');
 
       if (nameEl) nameEl.value = settings.name || '';
       if (descEl) descEl.value = settings.description || '';
@@ -45,6 +47,8 @@ const initSettingsPage = async () => {
       if (slugEl) slugEl.value = settings.slug || '';
       if (gstinEl) gstinEl.value = settings.gstin || '';
       if (stateEl) stateEl.value = settings.stateCode || '27';
+      if (onesignalAppIdEl) onesignalAppIdEl.value = settings.onesignalAppId || '';
+      if (onesignalRestKeyEl) onesignalRestKeyEl.value = settings.onesignalRestApiKey || '';
 
       // Show live logo preview if URL exists
       if (settings.logoUrl) {
@@ -116,6 +120,8 @@ const initSettingsPage = async () => {
       const currency = document.getElementById('set-rest-currency').value.trim();
       const gstin = document.getElementById('set-rest-gstin').value.trim().toUpperCase();
       const stateCode = document.getElementById('set-rest-state').value;
+      const onesignalAppId = document.getElementById('set-onesignal-appid').value.trim();
+      const onesignalRestApiKey = document.getElementById('set-onesignal-restkey').value.trim();
 
       const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
@@ -124,7 +130,7 @@ const initSettingsPage = async () => {
       submitBtn.innerText = 'Saving...';
 
       try {
-        await saveRestaurantSettings({ name, logoUrl, description, currency, slug, gstin, stateCode, enableTracking });
+        await saveRestaurantSettings({ name, logoUrl, description, currency, slug, gstin, stateCode, enableTracking, onesignalAppId, onesignalRestApiKey });
         if (alertSuccess) {
           alertSuccess.innerText = 'Business settings saved successfully!';
           alertSuccess.classList.remove('hidden');

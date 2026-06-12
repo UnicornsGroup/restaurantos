@@ -36,7 +36,11 @@ export const restaurantConfig = {
   //   • ngrok:       "https://abc123.ngrok.io"
   //   • Local IP:    "http://192.168.1.xxx:5173"  (find with: ipconfig on Windows)
   //   • Leave ""     to auto-detect the base URL (domain + subdirectory path)
-  qrBaseUrl: ""
+  qrBaseUrl: "",
+
+  // ─── OneSignal Web Push Configuration ──────────────────────────────────────
+  onesignalAppId: "",
+  onesignalRestApiKey: ""
 };
 
 // Auto-fill if empty

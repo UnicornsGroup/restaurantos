@@ -1,9 +1,69 @@
 // Waiter real-time notification alert module for DiningOS
 import { db, collection, query, where, onSnapshot } from './firebase-config.js';
+import { restaurantConfig } from './config.js';
 
 let notifiedOrders = new Set();
 let isFirstLoad = true;
 let unsubscribeListener = null;
+
+// Dynamically load the OneSignal Web SDK
+const loadOneSignalSDK = () => {
+  return new Promise((resolve, reject) => {
+    if (window.OneSignal) {
+      resolve(window.OneSignal);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+    script.defer = true;
+    script.onload = () => {
+      resolve(window.OneSignal);
+    };
+    script.onerror = (e) => {
+      console.error("Failed to load OneSignal SDK:", e);
+      reject(e);
+    };
+    document.head.appendChild(script);
+  });
+};
+
+// Initialize OneSignal and identify the user
+const initOneSignal = async (currentUser) => {
+  let appId = restaurantConfig.onesignalAppId || '';
+  const cachedSettings = localStorage.getItem('settings_restaurant');
+  if (cachedSettings) {
+    try {
+      const settings = JSON.parse(cachedSettings);
+      if (settings.onesignalAppId) {
+        appId = settings.onesignalAppId;
+      }
+    } catch (e) {}
+  }
+
+  if (!appId) {
+    console.log("OneSignal App ID not configured. Push notifications disabled.");
+    return;
+  }
+
+  try {
+    await loadOneSignalSDK();
+    window.OneSignal = window.OneSignal || [];
+    window.OneSignal.push(async function() {
+      await window.OneSignal.init({
+        appId: appId,
+        allowLocalhostAsSecureOrigin: true
+      });
+      
+      // Associate active device with waiter ID
+      await window.OneSignal.login(currentUser.id);
+      await window.OneSignal.User.addTag("waiterId", currentUser.id);
+      console.log("OneSignal push notifications successfully initialized for waiter:", currentUser.id);
+    });
+  } catch (err) {
+    console.error("OneSignal initialization failed:", err);
+  }
+};
+
 
 // Play a high-quality warning/notification bell sound
 const playChime = () => {
@@ -91,6 +151,9 @@ const createToastContainer = () => {
 export const initWaiterNotifications = (currentUser) => {
   // Guard clause if user doesn't exist or is not a waiter
   if (!currentUser || currentUser.role !== 'waiter') return;
+
+  // Initialize OneSignal Push Notifications
+  initOneSignal(currentUser);
   
   // Stop existing subscription if any
   if (unsubscribeListener) {

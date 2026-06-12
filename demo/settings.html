@@ -181,6 +181,30 @@
         </div>
       </div>
 
+      <!-- OneSignal Notifications Config -->
+      <div class="glass-panel" style="padding: 28px 32px; display: flex; flex-direction: column; gap: 24px;">
+        <div class="section-header" style="margin: 0; padding: 0; border: none;">
+          <h2 style="font-size: 16px;">
+            <i data-lucide="bell" style="width: 18px; height: 18px;"></i>
+            OneSignal Notifications
+          </h2>
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.5;">
+          Configure OneSignal Web Push to alert waiters when their assigned tables have orders ready. Let waiters receive notifications even when their screens are off or locked.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div>
+            <label for="set-onesignal-appid">OneSignal App ID</label>
+            <input type="text" id="set-onesignal-appid" placeholder="e.g. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+          </div>
+          <div>
+            <label for="set-onesignal-restkey">REST API Key</label>
+            <input type="password" id="set-onesignal-restkey" placeholder="e.g. Os_REST_API_KEY_xxxxxxxx">
+          </div>
+        </div>
+      </div>
+
       <!-- Submit CTA -->
       <div style="display: flex; justify-content: flex-end; gap: 12px;">
         <a href="dashboard.html" class="btn btn-secondary">Cancel</a>

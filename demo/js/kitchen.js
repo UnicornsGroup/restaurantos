@@ -2,6 +2,8 @@
 import { initAuthGuard } from './auth.js';
 import { updateOrderStatus } from './db.js';
 import { subscribeKdsOrders } from './realtime.js';
+import { db, collection, query, where, getDocs } from './firebase-config.js';
+import { restaurantConfig } from './config.js';
 
 let activeUser = null;
 let activeRestaurant = null;
@@ -11,6 +13,81 @@ let kdsUnsubscribe = null;
 
 // DOM references
 const kdsGrid = document.getElementById('kds-grid');
+
+// Send a OneSignal push notification to all waiters assigned to this table
+const triggerWaiterNotification = async (orderId, tableId, tableNumber) => {
+  if (!tableId) return;
+
+  // 1. Resolve configuration keys
+  let appId = restaurantConfig.onesignalAppId || '';
+  let restApiKey = restaurantConfig.onesignalRestApiKey || '';
+
+  const cachedSettings = localStorage.getItem('settings_restaurant');
+  if (cachedSettings) {
+    try {
+      const settings = JSON.parse(cachedSettings);
+      if (settings.onesignalAppId) appId = settings.onesignalAppId;
+      if (settings.onesignalRestApiKey) restApiKey = settings.onesignalRestApiKey;
+    } catch (e) {}
+  }
+
+  if (activeRestaurant) {
+    if (activeRestaurant.onesignalAppId) appId = activeRestaurant.onesignalAppId;
+    if (activeRestaurant.onesignalRestApiKey) restApiKey = activeRestaurant.onesignalRestApiKey;
+  }
+
+  if (!appId || !restApiKey) {
+    console.log("OneSignal push configuration missing. Skipping waiter push notification.");
+    return;
+  }
+
+  try {
+    // 2. Query waiters assigned to this table
+    const q = query(
+      collection(db, 'users'),
+      where('role', '==', 'waiter'),
+      where('assigned_tables', 'array-contains', tableId)
+    );
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      console.log(`No waiters assigned to table ID: ${tableId}`);
+      return;
+    }
+
+    // 3. Build target tag filters (matching any of the assigned waiters)
+    const filters = [];
+    snap.forEach((doc, idx) => {
+      if (idx > 0) {
+        filters.push({ operator: "OR" });
+      }
+      filters.push({ field: "tag", key: "waiterId", relation: "=", value: doc.id });
+    });
+
+    const restaurantName = activeRestaurant?.name || restaurantConfig.name || "DiningOS";
+
+    // 4. Dispatch notification payload to OneSignal
+    const response = await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Authorization": `Basic ${restApiKey}`
+      },
+      body: JSON.stringify({
+        app_id: appId,
+        headings: { en: `${restaurantName} — Order Ready` },
+        contents: { en: `${tableNumber || 'Table'}: Order #${orderId.slice(0, 8).toUpperCase()} is ready to serve!` },
+        filters: filters,
+        url: `${window.location.origin}${window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'))}/tables.html`
+      })
+    });
+
+    const result = await response.json();
+    console.log("OneSignal push notification response:", result);
+  } catch (err) {
+    console.error("Failed to trigger waiter push notification:", err);
+  }
+};
 
 const initKitchenPage = () => {
   // Subscribe to live incoming orders
@@ -134,6 +211,9 @@ const renderKdsTickets = () => {
           ticket.style.opacity = '0';
           try {
             await updateOrderStatus(order.id, nextStatus, order.table_id || null);
+            if (nextStatus === 'ready') {
+              triggerWaiterNotification(order.id, order.table_id || null, order.table_number || null);
+            }
           } catch (err) {
             ticket.style.transform = 'none';
             ticket.style.opacity = '1';
@@ -156,6 +236,9 @@ const renderKdsTickets = () => {
 
       try {
         await updateOrderStatus(orderId, nextStatus, tableId);
+        if (nextStatus === 'ready') {
+          triggerWaiterNotification(orderId, tableId, order ? order.table_number : null);
+        }
       } catch (err) {
         alert("Failed to update status.");
       }
