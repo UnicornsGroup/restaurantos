@@ -49,15 +49,18 @@ const initOneSignal = async (currentUser) => {
     await loadOneSignalSDK();
     window.OneSignal = window.OneSignal || [];
     window.OneSignal.push(async function() {
-      // Configure service worker paths explicitly to support both root and subdirectory deployments
-      const isSubdir = window.location.pathname.toLowerCase().includes('/demo/');
+      // Configure service worker paths explicitly to support both root and custom subdirectory deployments
+      const pathName = window.location.pathname;
+      const lastSlash = pathName.lastIndexOf('/');
+      const directoryScope = lastSlash > 0 ? pathName.substring(0, lastSlash + 1) : '/';
+      
       const initOptions = {
         appId: appId,
         allowLocalhostAsSecureOrigin: true
       };
-      if (isSubdir) {
+      if (directoryScope !== '/') {
         initOptions.serviceWorkerPath = 'OneSignalSDKWorker.js';
-        initOptions.serviceWorkerParam = { scope: '/Demo/' };
+        initOptions.serviceWorkerParam = { scope: directoryScope };
       }
       await window.OneSignal.init(initOptions);
       
