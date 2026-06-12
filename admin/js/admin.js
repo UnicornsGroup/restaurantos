@@ -1076,6 +1076,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalCallBtn = document.getElementById('modal-call-btn');
   const modalWaBtn = document.getElementById('modal-whatsapp-btn');
   const modalEmailBtn = document.getElementById('modal-email-btn');
+  const modalViewMenuBtn = document.getElementById('modal-view-menu-btn');
   const modalRenewBtn = document.getElementById('modal-renew-btn');
   const modalSuspendBtn = document.getElementById('modal-suspend-btn');
   const modalExtendBtn = document.getElementById('modal-extend-btn');
@@ -1099,6 +1100,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const email = selectedRestaurant.ownerEmail || `owner@${selectedRestaurant.id}.com`;
       const { subject, body } = getEmailTemplate(selectedRestaurant);
       await sendEmail(email, selectedRestaurant.ownerName || 'Owner', selectedRestaurant.name, subject, body);
+    });
+  }
+  if (modalViewMenuBtn) {
+    modalViewMenuBtn.addEventListener('click', () => {
+      if (!selectedRestaurant) return;
+      const id = selectedRestaurant.id;
+      const menuUrl = `${window.location.origin}/${id}/customer-menu.html`;
+      window.open(menuUrl, '_blank');
     });
   }
   if (modalRenewBtn) {
