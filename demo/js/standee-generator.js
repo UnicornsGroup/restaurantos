@@ -214,7 +214,7 @@ const updatePreviewCard = async (tableNo) => {
   }
 };
 
-// Export to PDF
+// Export to PDF (4-up layout on A4 pages)
 const exportToPDF = async () => {
   const { jsPDF } = window.jspdf;
   if (!jsPDF || !window.html2canvas) {
@@ -222,10 +222,7 @@ const exportToPDF = async () => {
     return;
   }
 
-  // Save original preview state
   const prevTableNum = currentPreviewTable;
-
-  // Disable button and show status
   qrDownloadPdfBtn.disabled = true;
   const originalText = qrDownloadPdfBtn.innerText;
   qrDownloadPdfBtn.innerText = "Exporting PDF...";
@@ -233,37 +230,74 @@ const exportToPDF = async () => {
   try {
     const pdf = new jsPDF('p', 'mm', 'a4');
     
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const quadWidth = pageWidth / 2;   // 105mm
+    const quadHeight = pageHeight / 2; // 148.5mm
+    
+    const standeeWidth = 92;
+    const standeeHeight = 135;
+    
+    // Center offset within each quadrant
+    const offsetX = (quadWidth - standeeWidth) / 2;
+    const offsetY = (quadHeight - standeeHeight) / 2;
+    
+    const quadrants = [
+      { qx: 0, qy: 0 },           // top-left
+      { qx: quadWidth, qy: 0 },   // top-right
+      { qx: 0, qy: quadHeight },  // bottom-left
+      { qx: quadWidth, qy: quadHeight } // bottom-right
+    ];
+
     for (let i = 1; i <= tablesCount; i++) {
-      // 1. Update card template
+      const posIndex = (i - 1) % 4;
+      
+      if (posIndex === 0) {
+        if (i > 1) pdf.addPage();
+        
+        // Fill entire page with cream background
+        pdf.setFillColor(255, 244, 230); // #FFF4E6
+        pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+      }
+      
+      // Update template card preview for rendering
       await updatePreviewCard(i);
-      // Wait briefly for canvas/image rendering to settle
       await new Promise(r => setTimeout(r, 50));
       
-      // 2. Render to high-DPI canvas
       const canvas = await window.html2canvas(standeeCardTemplate, {
-        scale: 3, // 3x scale makes it ~300 DPI for high quality prints
+        scale: 3,
+        backgroundColor: '#FFFFFF', // The standee content itself uses white background
         useCORS: true
       });
       const imgData = canvas.toDataURL('image/png');
       
-      if (i > 1) {
-        pdf.addPage();
-      }
+      const quad = quadrants[posIndex];
+      const x = quad.qx + offsetX;
+      const y = quad.qy + offsetY;
       
-      // A4 is 210mm x 297mm. Standee is 100mm x 150mm. Centering offsets:
-      const x = (210 - 100) / 2;
-      const y = (297 - 150) / 2;
-      
-      pdf.addImage(imgData, 'PNG', x, y, 100, 150);
+      pdf.addImage(imgData, 'PNG', x, y, standeeWidth, standeeHeight);
     }
     
-    pdf.save(`${restaurantName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-standees.pdf`);
-    alert("PDF downloaded successfully!");
+    // Draw cut lines on every page
+    const totalPages = pdf.internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      pdf.setPage(p);
+      pdf.setDrawColor(204, 204, 204);
+      pdf.setLineDashPattern([2, 2], 0);
+      
+      // Vertical cut line (center of page)
+      pdf.line(quadWidth, 0, quadWidth, pageHeight);
+      
+      // Horizontal cut line (center of page)
+      pdf.line(0, quadHeight, pageWidth, quadHeight);
+    }
+    
+    pdf.save(`${restaurantName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-standees-4up.pdf`);
+    alert("4-up PDF downloaded successfully!");
   } catch (err) {
     console.error("PDF generation failed:", err);
     alert("Export failed: " + err.message);
   } finally {
-    // Restore state
     currentPreviewTable = prevTableNum;
     await updatePreviewCard(prevTableNum);
     qrDownloadPdfBtn.disabled = false;
