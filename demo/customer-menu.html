@@ -381,7 +381,16 @@
         localStorage.setItem('ros_lang', lang);
         
         // Delete existing cookies first
-        const domains = ['', '.github.io', 'unicornsgroup.github.io', window.location.hostname];
+        const domains = ['', window.location.hostname];
+        const host = window.location.hostname;
+        const dotParts = host.split('.');
+        if (dotParts.length > 1) {
+          domains.push('.' + host);
+          if (dotParts.length > 2) {
+            domains.push('.' + dotParts.slice(1).join('.'));
+            domains.push('.' + dotParts.slice(2).join('.'));
+          }
+        }
         domains.forEach(d => {
           const domainStr = d ? `; domain=${d}` : '';
           document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/${domainStr}`;

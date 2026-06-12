@@ -8,6 +8,20 @@ export const firebaseConfig = {
   appId: "1:193027844222:web:f237d98af4b6e7f4f2d02f"
 };
 
+// Auto-detect public URL with subdirectory path if empty
+const getAutoQrBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    const pathname = window.location.pathname;
+    const lastSlash = pathname.lastIndexOf('/');
+    if (lastSlash > 0) {
+      return `${origin}${pathname.substring(0, lastSlash)}`;
+    }
+    return origin;
+  }
+  return "";
+};
+
 export const restaurantConfig = {
   name: "Dev Cafe",
   slug: "dev-cafe",
@@ -21,6 +35,12 @@ export const restaurantConfig = {
   //   • Tunnelmole:  "https://abc123.tunnelmole.net"
   //   • ngrok:       "https://abc123.ngrok.io"
   //   • Local IP:    "http://192.168.1.xxx:5173"  (find with: ipconfig on Windows)
-  //   • Leave ""     to auto-use window.location.origin (only works on same device)
-  qrBaseUrl: "https://unicornsgroup.github.io/restaurantos"
+  //   • Leave ""     to auto-detect the base URL (domain + subdirectory path)
+  qrBaseUrl: ""
 };
+
+// Auto-fill if empty
+if (!restaurantConfig.qrBaseUrl) {
+  restaurantConfig.qrBaseUrl = getAutoQrBaseUrl();
+}
+
